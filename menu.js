@@ -557,7 +557,7 @@ const COCKTAILS = [
 		straw: true,
 		ice: "Cubed ice",
 		method: "Build over ice and top with your preferred mixer.",
-		garnish: "—",
+		garnish: "Mint + passion fruit",
 		chilledGlass: false
 	},
 
@@ -619,7 +619,7 @@ const COCKTAILS = [
 		straw: true,
 		ice: "Cubed ice",
 		method: "Build over ice; finish with a splash of grenadine.",
-		garnish: "—",
+		garnish: "Cherry and pineaple slice",
 		chilledGlass: false
 	},
 
