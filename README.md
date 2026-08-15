@@ -1,40 +1,40 @@
-# André's Bar
+# André's Bar 🍸
 
-This folder is ready to publish directly with **GitHub Pages**.
+A small personal cocktail menu project built with **ChatGPT from my own input, recipes, and home bar setup**.
 
-## The file you normally edit
+The site is designed both as a quick reference for making drinks and as a simple menu to show guests. It includes ingredient stock tracking, cocktail availability, favorites, filters, serving information, recipe variants, and QR sharing. Stock and favorites are stored locally in the browser using `localStorage`.
 
-Open **`menu.js`** whenever you want to add, remove, or change:
+The drinks and measurements included here are based on what I personally make at home, so they may differ from official or traditional recipes.
 
-- ingredients and their stock groups;
-- cocktails and measurements;
-- cocktail categories and emojis;
-- variants such as Classic / Passion;
-- front / side / back serves;
-- glass, ice, method and garnish information.
+Anyone is free to use, adapt, or modify this project for their own bar.
 
-`menu.js` starts with commented examples for every supported recipe format.
+## Customizing the menu
 
-## Other files
+Most changes only require editing:
 
-- `index.html` — page structure; normally leave it alone.
-- `styles.css` — all visual styling.
-- `app.js` — stock, filters, favorites, variants, serving multiplier, availability and localStorage logic.
-- `qr.js` — bundled QR-code engine used by the Share button.
+`menu.js`
 
-## GitHub Pages
+This file contains:
 
-Upload all five site files to the same folder in your repository. `index.html`
-must stay beside the four `.js` / `.css` files so the relative paths work.
+* Ingredients and stock-tracked items
+* Cocktail recipes
+* Measurements
+* Categories and emojis
+* Glass, ice, garnish, straw, and serving information
+* Alternative ingredients
+* Recipe variants
+* Side, front, and back serves
 
-Stock and favorites continue to use browser localStorage exactly as before.
+The file is intentionally written in a human-readable format with comments and examples, so adding or changing drinks should not require touching the rest of the application.
 
-### Straw service
-
-If a cocktail is normally served with a straw, add this to that cocktail in `menu.js`:
+For example, a normal ingredient looks like:
 
 ```js
-straw: true,
+{ ingredient: "gin", amount: 50, unit: "ml" }
 ```
 
-The menu will show **“with straw”** beside the glass. If `straw` is omitted or false, it shows nothing about straws.
+and a cocktail is simply added as another object inside the `COCKTAILS` list.
+
+The rest of the files handle the interface and application logic and normally do not need to be changed.
+
+Enjoy, and make it your own. 🍹
