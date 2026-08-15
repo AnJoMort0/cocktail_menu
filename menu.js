@@ -900,7 +900,7 @@ const COCKTAILS = [
 		glass: "Coupe",
 		ice: "Shaken with ice, served without ice",
 		method: "Shake with ice and fine-strain.",
-		garnish: "—",
+		garnish: "Lemon slice",
 		chilledGlass: true
 	},
 
