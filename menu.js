@@ -318,7 +318,7 @@ const COCKTAILS = [
 		],
 
 		side: [
-			{ ingredient: "prosecco",            amount: 40,    unit: "ml" }
+			{ ingredient: "prosecco",            amount: 40,    unit: "ml", blocksAvailability: false }
 		],
 
 		glass: "Coupe / Martini + shot glass",
