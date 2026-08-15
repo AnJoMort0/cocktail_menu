@@ -510,19 +510,15 @@ const COCKTAILS = [
 		id: "rumPassion",
 		name: "Rum & Passion",
 
+		baseVariantName: "Classic",
+		baseVariantEmoji: "⚪",
+
 		mainSpirit: "White rum",
 		mainTaste: "Passion fruit",
 		categories: ["fruity", "sour", "tropical"],
 
 		ingredients: [
-			{
-				label: "Normally it's white",
-
-				anyOf: [
-					{ ingredient: "whiteRum",       amount: 40,    unit: "ml" },
-					{ ingredient: "darkRum",        amount: 40,    unit: "ml" }
-				]
-			},
+			{ ingredient: "whiteRum",        amount: 40,    unit: "ml" },
 			{ ingredient: "passoa",          amount: 30,    unit: "ml" },
 			{ ingredient: "lime",            amount: 20,    unit: "ml" },
 			{ ingredient: "simpleSyrup",     amount: 10,    unit: "ml" },
@@ -538,6 +534,22 @@ const COCKTAILS = [
 					{ ingredient: "pineappleJuice",    amount: null,    unit: "to top" },
 					{ ingredient: "cranberryJuice",    amount: null,    unit: "to top" }
 				]
+			}
+		],
+
+    variants: [
+			{
+				id: "dark",
+				name: "Dark",
+				emoji: "🟤",
+
+				ingredientReplacements: {
+					whiteRum: {
+						ingredient: "darkRum",
+						amount: 40,
+						unit: "ml"
+					}
+				}
 			}
 		],
 
@@ -844,6 +856,39 @@ const COCKTAILS = [
 
 				ingredientReplacements: {
 					simpleSyrup: {
+						ingredient: "passionFruitSyrup",
+						amount: 20,
+						unit: "ml"
+					}
+				}
+			},
+
+      {
+				id: "dark",
+				name: "Dark",
+				emoji: "🟤",
+
+				ingredientReplacements: {
+					whiteRum: {
+						ingredient: "darkRum",
+						amount: 30,
+						unit: "ml"
+					}
+				}
+			},
+
+      {
+				id: "darkPassion",
+				name: "Dark Passion",
+				emoji: "🥀",
+
+				ingredientReplacements: {
+					whiteRum: {
+						ingredient: "darkRum",
+						amount: 30,
+						unit: "ml"
+					},
+          simpleSyrup: {
 						ingredient: "passionFruitSyrup",
 						amount: 20,
 						unit: "ml"
