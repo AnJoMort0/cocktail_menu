@@ -228,22 +228,94 @@ function isInStock(id) {
 }
 
 function replaceIngredientsInLines(lines, replacements = {}) {
-  return (lines || []).flatMap(line => {
-    if (line.anyOf) {
-      const options = line.anyOf.flatMap(option => {
-        const replacement = replacements[option.ingredient];
-        if (replacement === undefined) return [option];
-        if (replacement === null) return [];
-        return [{ ...option, ...replacement }];
-      });
-      return options.length ? [{ ...line, anyOf: options }] : [];
-    }
+	return (lines || []).flatMap(line => {
 
-    const replacement = replacements[line.ingredient];
-    if (replacement === undefined) return [line];
-    if (replacement === null) return [];
-    return [{ ...line, ...replacement }];
-  });
+		// ---------------------------------------------------------------
+		// EXISTING "CHOOSE ONE" / anyOf GROUP
+		// ---------------------------------------------------------------
+		if (line.anyOf) {
+			const options = line.anyOf.flatMap(option => {
+				const replacement = replacements[option.ingredient];
+
+				// No replacement for this ingredient
+				if (replacement === undefined) {
+					return [option];
+				}
+
+				// null means remove this ingredient completely
+				if (replacement === null) {
+					return [];
+				}
+
+				// Replace one option with several alternative options
+				if (replacement.anyOf) {
+					return replacement.anyOf.map(newOption => ({
+						...option,
+						...newOption
+					}));
+				}
+
+				// Normal one-for-one replacement
+				return [{
+					...option,
+					...replacement
+				}];
+			});
+
+			return options.length
+				? [{
+					...line,
+					anyOf: options
+				}]
+				: [];
+		}
+
+
+		// ---------------------------------------------------------------
+		// NORMAL INGREDIENT
+		// ---------------------------------------------------------------
+		const replacement = replacements[line.ingredient];
+
+		// No replacement
+		if (replacement === undefined) {
+			return [line];
+		}
+
+		// null removes the ingredient
+		if (replacement === null) {
+			return [];
+		}
+
+
+		// ---------------------------------------------------------------
+		// REPLACE ONE INGREDIENT WITH A CHOICE OF INGREDIENTS
+		// ---------------------------------------------------------------
+		if (replacement.anyOf) {
+
+			// Remove properties that only belong to the old ingredient.
+			// Keep things such as blocksAvailability.
+			const {
+				ingredient,
+				amount,
+				unit,
+				...lineOptions
+			} = line;
+
+			return [{
+				...lineOptions,
+				...replacement
+			}];
+		}
+
+
+		// ---------------------------------------------------------------
+		// NORMAL ONE-FOR-ONE REPLACEMENT
+		// ---------------------------------------------------------------
+		return [{
+			...line,
+			...replacement
+		}];
+	});
 }
 
 function resolveDrinkVariant(drink, variantId = "base") {
