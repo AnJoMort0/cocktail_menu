@@ -4,119 +4,67 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#111416" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="André's Bar" />
   <title>André's Bar</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <main class="app-shell">
     <header class="hero">
-      <div>
-        <p class="eyebrow">Cocktail menu</p>
-        <h1>André's Bar</h1>
-      </div>
-      <div class="hero-stat" aria-live="polite">
-        <strong id="readyCount">0</strong>
-        <span>drinks available</span>
+      <div><p class="eyebrow">Cocktail menu</p><h1>André's Bar</h1></div>
+      <div class="hero-side">
+        <div class="hero-actions">
+          <button class="view-mode-btn" id="modeToggleBtn" type="button">🍸 Bartender</button>
+          <button class="view-mode-btn" id="installBtn" type="button" hidden>＋ Install app</button>
+        </div>
+        <div class="hero-stat" aria-live="polite"><strong id="readyCount">0</strong><span>drinks available</span></div>
       </div>
     </header>
 
-    <!--
-      Guest-facing controls are intentionally collapsed so the cocktail menu is the focus.
-      Stock choices and favorites are persisted in localStorage on this browser/device.
-      Stock defaults to available when an ingredient has never been changed.
-    -->
-    <details class="panel collapsible-panel stock-panel">
-      <summary>
-        <span class="summary-main"><span>Bar stock</span><span class="summary-hint">Ingredients</span></span>
-      </summary>
-      <div class="collapsible-content">
-        <div class="stock-actions">
-          <div class="button-row">
-            <button class="btn subtle" id="stockAllBtn" type="button">Check all</button>
-            <button class="btn subtle" id="stockNoneBtn" type="button">Uncheck all</button>
-          </div>
-        </div>
-        <div id="stockGroups" class="stock-groups"></div>
+    <section class="make-me" aria-label="Quick cocktail choices">
+      <div class="make-me-heading"><span class="make-me-title">Make me something…</span><button class="surprise-btn" id="surpriseBtn" type="button">🎲 Surprise me</button></div>
+      <div class="quick-filters" id="quickFilters">
+        <button type="button" class="quick-filter" data-quick-category="sweet">🍬 Sweet</button>
+        <button type="button" class="quick-filter" data-quick-category="sour">🍋 Sour</button>
+        <button type="button" class="quick-filter" data-quick-category="strong">💪 Strong</button>
+        <button type="button" class="quick-filter" data-quick-category="fresh">❄️ Refreshing</button>
+        <button type="button" class="quick-filter" data-quick-category="fruity">🍓 Fruity</button>
+        <button type="button" class="quick-filter" data-quick-category="all">✨ Anything</button>
       </div>
+    </section>
+
+    <details class="panel collapsible-panel stock-panel bartender-only">
+      <summary><span class="summary-main"><span>Bar stock</span><span class="summary-hint">Ingredients</span></span></summary>
+      <div class="collapsible-content"><div class="stock-actions"><div class="button-row"><button class="btn subtle" id="stockAllBtn" type="button">Check all</button><button class="btn subtle" id="stockNoneBtn" type="button">Uncheck all</button></div></div><div id="stockGroups" class="stock-groups"></div></div>
     </details>
 
     <details class="panel collapsible-panel filters-panel">
-      <summary>
-        <span class="summary-main"><span>Filters &amp; sorting</span><span class="summary-hint">Search &amp; sort</span></span>
-      </summary>
+      <summary><span class="summary-main"><span>Filters &amp; sorting</span><span class="summary-hint">Search &amp; sort</span></span></summary>
       <section class="toolbar" aria-label="Cocktail filters">
         <input id="searchInput" class="control search" type="search" placeholder="Search drink or ingredient…" aria-label="Search drinks" />
-        <select id="availabilityFilter" class="control" aria-label="Filter by availability">
-          <option value="all">All availability</option>
-          <option value="ready">Ready now</option>
-          <option value="missing">Missing something</option>
-          <option value="favorites">Favorites only</option>
-        </select>
-        <select id="categoryFilter" class="control" aria-label="Filter by category"><option value="all">All categories</option></select>
-        <select id="spiritFilter" class="control" aria-label="Filter by main spirit"><option value="all">All spirits</option></select>
-        <select id="tasteFilter" class="control" aria-label="Filter by main taste"><option value="all">All tastes</option></select>
-        <select id="sortSelect" class="control" aria-label="Sort cocktails">
-          <option value="alpha">A → Z</option>
-          <option value="spirit">Main spirit</option>
-          <option value="category">Category</option>
-          <option value="taste">Main taste</option>
-          <option value="availability">Availability</option>
-        </select>
+        <select id="availabilityFilter" class="control"><option value="all">All availability</option><option value="ready">Ready now</option><option value="missing">Missing something</option><option value="favorites">Favorites only</option></select>
+        <select id="categoryFilter" class="control"><option value="all">All categories</option></select>
+        <select id="spiritFilter" class="control"><option value="all">All spirits</option></select>
+        <select id="tasteFilter" class="control"><option value="all">All tastes</option></select>
+        <select id="sortSelect" class="control"><option value="alpha">A → Z</option><option value="spirit">Main spirit</option><option value="category">Category</option><option value="taste">Main taste</option><option value="availability">Availability</option></select>
+        <button class="clear-filters-btn" id="clearFiltersBtn" type="button">Clear filters</button>
       </section>
     </details>
 
     <div class="menu-controls">
-      <div class="serving-scale">
-        <span class="serving-scale-label">Serving scale</span>
-        <div class="multiplier" aria-label="Number of drinks">
-          <button id="minusBtn" type="button" aria-label="Decrease number of drinks">−</button>
-          <output id="multiplierOutput">1×</output>
-          <button id="plusBtn" type="button" aria-label="Increase number of drinks">+</button>
-        </div>
-      </div>
-      <button class="share-qr-btn" id="shareQrBtn" type="button" title="Share the current bar status">
-        <span class="share-qr-icon" aria-hidden="true">▦</span> Share
-      </button>
+      <div class="serving-scale bartender-only"><span class="serving-scale-label">Serving scale</span><div class="multiplier"><button id="minusBtn" type="button">−</button><output id="multiplierOutput">1×</output><button id="plusBtn" type="button">+</button></div></div>
+      <button class="share-qr-btn" id="shareQrBtn" type="button"><span class="share-qr-icon">▦</span> Share</button>
     </div>
-
     <div id="activeFilters" class="active-filters"></div>
-
-    <div class="results-head">
-      <h2>Cocktails</h2>
-      <div class="results-count" id="resultsCount"></div>
-    </div>
-
+    <div class="results-head"><h2>Cocktails</h2><div class="results-count" id="resultsCount"></div></div>
     <section id="cocktailGrid" class="cocktail-grid" aria-live="polite"></section>
 
-    <dialog class="qr-dialog" id="shareQrDialog">
-      <div class="qr-dialog-card">
-        <div class="qr-dialog-head">
-          <div>
-            <h2>Share André's Bar</h2>
-            <p>Scan for the current menu availability.</p>
-          </div>
-          <button class="qr-close" id="closeQrBtn" type="button" aria-label="Close">×</button>
-        </div>
-        <div class="qr-code-wrap" id="qrCodeWrap" aria-live="polite"></div>
-        <p class="qr-status" id="qrStatus"></p>
-        <div class="qr-actions">
-          <button class="qr-action" id="copyShareLinkBtn" type="button">Copy link</button>
-        </div>
-      </div>
-    </dialog>
-
-    <div class="import-toast" id="importToast" role="status">Fresh bar status loaded ✓</div>
+    <dialog class="qr-dialog" id="shareQrDialog"><div class="qr-dialog-card"><div class="qr-dialog-head"><div><h2>Share André's Bar</h2><p>Scan for the current menu availability and André's picks.</p></div><button class="qr-close" id="closeQrBtn" type="button">×</button></div><div class="qr-code-wrap" id="qrCodeWrap"></div><p class="qr-status" id="qrStatus"></p><div class="qr-actions"><button class="qr-action" id="copyShareLinkBtn" type="button">Copy link</button></div></div></dialog>
+    <div class="import-toast" id="importToast" role="status" aria-live="polite"></div>
   </main>
-
-  <!--
-    Site structure:
-      menu.js   = edit ingredients, cocktails, variants and categories here
-      styles.css = visual design
-      qr.js      = embedded QR encoder used by the Share button
-      app.js     = interface, filtering, localStorage and availability logic
-  -->
-  <script src="qr.js"></script>
-  <script src="menu.js"></script>
-  <script src="app.js"></script>
+  <script src="qr.js"></script><script src="menu.js"></script><script src="app.js"></script>
 </body>
 </html>

@@ -41,6 +41,13 @@
 
 	straw: true,
 
+	GUEST DESCRIPTION + TASTE PROFILE
+	---------------------------------
+	description: "Bright, fresh and easy-drinking.",
+
+	// Optional 1–5 guest-friendly taste scales. Add only the ones you want.
+	tasteProfile: { sweet: 2, sour: 4, strong: 3 },
+
 	VARIANTS
 	--------
 	baseVariantName: "Classic",
@@ -61,6 +68,22 @@
 			}
 		}
 	]
+
+	A variant may also override presentation/details directly:
+
+	{
+		id: "spicy",
+		name: "Spicy",
+		emoji: "🌶️",
+		addIngredients: [{ ingredient: "chiliSyrup", amount: 10, unit: "ml" }],
+		description: "A warmer, spicier version.",
+		garnish: "Chili + lime",
+		glass: "Coupe",
+		ice: "Shaken with ice, served without ice"
+	}
+
+	Fields such as description, tasteProfile, glass, ice, method, garnish,
+	straw, front, side and back can all be different for a variant.
 */
 
 
@@ -172,6 +195,9 @@ const COCKTAILS = [
 		mainTaste: "Lime",
 		categories: ["fresh", "sour", "classic"],
 
+		description: "Fresh mint, lime and rum lengthened with cold soda.",
+		tasteProfile: { sweet: 2, sour: 4, strong: 2 },
+
 		ingredients: [
 			{ ingredient: "whiteRum",       amount: 50,    unit: "ml" },
 			{ ingredient: "lime",           amount: 25,    unit: "ml" },
@@ -203,6 +229,9 @@ const COCKTAILS = [
 		mainSpirit: "Tequila",
 		mainTaste: "Lime",
 		categories: ["sour", "strong", "classic"],
+
+		description: "Sharp lime, tequila and orange with a clean, punchy finish.",
+		tasteProfile: { sweet: 2, sour: 5, strong: 4 },
 
 		ingredients: [
 			{ ingredient: "tequila",        amount: 50,    unit: "ml" },
@@ -250,6 +279,9 @@ const COCKTAILS = [
 		mainTaste: "Coffee",
 		categories: ["coffee", "sweet", "strong"],
 
+		description: "Silky espresso, vodka and coffee liqueur with a rich roasted finish.",
+		tasteProfile: { sweet: 3, sour: 1, strong: 4 },
+
 		ingredients: [
 			{ ingredient: "vodka",           amount: 40,    unit: "ml" },
 			{ ingredient: "coffeeLiqueur",   amount: 20,    unit: "ml" },
@@ -262,6 +294,8 @@ const COCKTAILS = [
 				id: "pistachio",
 				name: "Pistachio",
 				emoji: "🥜",
+
+				description: "Espresso with a nutty pistachio twist and a rich, dessert-like finish.",
 
 				ingredientReplacements: {
 					coffeeLiqueur: {
@@ -292,6 +326,9 @@ const COCKTAILS = [
 		mainSpirit: "Vanilla vodka",
 		mainTaste: "Passion fruit",
 		categories: ["fruity", "sweet", "tropical"],
+
+		description: "Tropical passion fruit and vanilla, with a sparkling sip on the side.",
+		tasteProfile: { sweet: 4, sour: 3, strong: 3 },
 
 		ingredients: [
 			{
@@ -341,6 +378,9 @@ const COCKTAILS = [
 		mainTaste: "Tonic",
 		categories: ["fresh", "bitter", "bubbly"],
 
+		description: "Crisp gin and tonic: dry, botanical and very refreshing.",
+		tasteProfile: { sweet: 1, sour: 1, strong: 3 },
+
 		ingredients: [
 			{ ingredient: "gin",      amount: 50,     unit: "ml" },
 			{ ingredient: "tonic",    amount: 120,    unit: "ml" }
@@ -369,6 +409,9 @@ const COCKTAILS = [
 		mainTaste: "Citrus",
 		categories: ["fruity", "sour", "classic"],
 
+		description: "Bright citrus and cranberry with a clean vodka backbone.",
+		tasteProfile: { sweet: 3, sour: 4, strong: 3 },
+
 		ingredients: [
 			{ ingredient: "vodka",             amount: 40,    unit: "ml" },
 			{ ingredient: "tripleSec",         amount: 20,    unit: "ml" },
@@ -381,6 +424,8 @@ const COCKTAILS = [
 				id: "fruity",
 				name: "Fruity",
 				emoji: "🍎",
+
+				description: "A softer, juicier Cosmopolitan with extra tropical fruit.",
 
 				ingredientReplacements: {
           cranberryJuice: {
@@ -415,6 +460,9 @@ const COCKTAILS = [
 		mainTaste: "Orange",
 		categories: ["bubbly", "bitter", "fresh"],
 
+		description: "Light, bittersweet orange and bubbles made for slow sipping.",
+		tasteProfile: { sweet: 3, sour: 1, strong: 2 },
+
 		ingredients: [
 			{ ingredient: "aperol",      amount: 60,    unit: "ml" },
 			{ ingredient: "prosecco",    amount: 90,    unit: "ml" },
@@ -440,6 +488,9 @@ const COCKTAILS = [
 		mainSpirit: "Rum",
 		mainTaste: "Fruit juice",
 		categories: ["fruity", "sweet", "tropical"],
+
+		description: "Juicy tropical fruit, two rums and a touch of grenadine.",
+		tasteProfile: { sweet: 4, sour: 3, strong: 3 },
 
 		ingredients: [
 			{ ingredient: "whiteRum",      amount: 30,    unit: "ml" },
@@ -477,6 +528,9 @@ const COCKTAILS = [
 		mainSpirit: "Gin",
 		mainTaste: "Alcool",
 		categories: ["fresh", "sour", "bubbly"],
+
+		description: "A long, fizzy gin sour finished with whichever mixer suits the mood.",
+		tasteProfile: { sweet: 2, sour: 4, strong: 3 },
 
 		ingredients: [
 			{ ingredient: "gin",             amount: 45,    unit: "ml" },
@@ -517,6 +571,9 @@ const COCKTAILS = [
 		mainTaste: "Passion fruit",
 		categories: ["fruity", "sour", "tropical"],
 
+		description: "Passion fruit, lime and rum in a flexible long tropical drink.",
+		tasteProfile: { sweet: 4, sour: 3, strong: 3 },
+
 		ingredients: [
 			{ ingredient: "whiteRum",        amount: 40,    unit: "ml" },
 			{ ingredient: "passoa",          amount: 30,    unit: "ml" },
@@ -542,6 +599,8 @@ const COCKTAILS = [
 				id: "dark",
 				name: "Dark",
 				emoji: "🟤",
+
+				description: "The same passion-fruit idea with darker, richer rum notes.",
 
 				ingredientReplacements: {
 					whiteRum: {
@@ -573,6 +632,9 @@ const COCKTAILS = [
 		mainSpirit: "Gin",
 		mainTaste: "Orange",
 		categories: ["bitter", "fresh", "bubbly"],
+
+		description: "A drier, stronger spritz pairing gin with bittersweet Aperol.",
+		tasteProfile: { sweet: 3, sour: 1, strong: 3 },
 
 		ingredients: [
 			{ ingredient: "gin",       amount: 40,    unit: "ml" },
@@ -608,6 +670,9 @@ const COCKTAILS = [
 		mainTaste: "Passion fruit",
 		categories: ["fruity", "sweet", "tropical"],
 
+		description: "Sweet coconut, passion fruit and orange with a sunset of grenadine.",
+		tasteProfile: { sweet: 5, sour: 1, strong: 2 },
+
 		ingredients: [
 			{ ingredient: "malibu",          amount: 40,      unit: "ml" },
 			{ ingredient: "passoa",          amount: 20,      unit: "ml" },
@@ -635,6 +700,9 @@ const COCKTAILS = [
 		mainSpirit: "Grappa",
 		mainTaste: "Citrus",
 		categories: ["bitter", "strong", "bubbly"],
+
+		description: "A bold, aromatic spritz with grappa and bittersweet citrus.",
+		tasteProfile: { sweet: 3, sour: 1, strong: 4 },
 
 		ingredients: [
 			{ ingredient: "grappa",    amount: 40,    unit: "ml" },
@@ -669,6 +737,9 @@ const COCKTAILS = [
 		mainSpirit: "Dark rum",
 		mainTaste: "Vanilla",
 		categories: ["sweet", "strong", "classic"],
+
+		description: "Dark rum, vanilla and a bitter accent in a rich spirit-forward serve.",
+		tasteProfile: { sweet: 3, sour: 1, strong: 5 },
 
 		ingredients: [
 			{ ingredient: "darkRum",         amount: 40,    unit: "ml" },
@@ -707,6 +778,9 @@ const COCKTAILS = [
 		mainTaste: "Coffee",
 		categories: ["coffee", "sweet", "strong"],
 
+		description: "Smooth coffee and vanilla with a sweeter, softer espresso-martini profile.",
+		tasteProfile: { sweet: 4, sour: 1, strong: 4 },
+
 		ingredients: [
 			{ ingredient: "vanillaVodka",    amount: 40,    unit: "ml" },
 			{ ingredient: "tripleSec",       amount: 20,    unit: "ml" },
@@ -734,6 +808,9 @@ const COCKTAILS = [
 		mainTaste: "Pistachio",
 		categories: ["sweet", "strong"],
 
+		description: "Creamy pistachio and vanilla wrapped around a vodka base.",
+		tasteProfile: { sweet: 5, sour: 1, strong: 4 },
+
 		ingredients: [
 			{ ingredient: "vodka",                    amount: 40,    unit: "ml" },
 			{ ingredient: "pistachioCreamLiqueur",    amount: 30,    unit: "ml" },
@@ -759,6 +836,9 @@ const COCKTAILS = [
 		mainSpirit: "Whisky",
 		mainTaste: "Alcool",
 		categories: ["fruity", "strong", "classic"],
+
+		description: "Whisky and vieille prune: deep, fruity and unapologetically spirit-forward.",
+		tasteProfile: { sweet: 3, sour: 1, strong: 5 },
 
 		ingredients: [
 			{ ingredient: "whisky",          amount: 50,    unit: "ml" },
@@ -786,6 +866,9 @@ const COCKTAILS = [
 		mainTaste: "Lemon",
 		categories: ["bitter", "fruity", "strong"],
 
+		description: "Gin, lemon and bittersweet orange in a bright Negroni-style twist.",
+		tasteProfile: { sweet: 3, sour: 2, strong: 4 },
+
 		ingredients: [
 			{ ingredient: "gin",           amount: 30,    unit: "ml" },
 			{ ingredient: "limoncello",    amount: 30,    unit: "ml" },
@@ -811,6 +894,9 @@ const COCKTAILS = [
 		mainSpirit: "Tequila",
 		mainTaste: "Porto",
 		categories: ["sour", "strong"],
+
+		description: "Tequila and port sharpened with lemon into a rich, fruity sour.",
+		tasteProfile: { sweet: 3, sour: 4, strong: 4 },
 
 		ingredients: [
 			{ ingredient: "tequila",        amount: 40,    unit: "ml" },
@@ -842,6 +928,9 @@ const COCKTAILS = [
 		mainTaste: "Lime",
 		categories: ["sour", "strong", "classic", "fruity"],
 
+		description: "Crisp rum, bright lime and just enough sweetness.",
+		tasteProfile: { sweet: 2, sour: 5, strong: 4 },
+
 		ingredients: [
 			{ ingredient: "whiteRum",       amount: 30,    unit: "ml" },
 			{ ingredient: "simpleSyrup",    amount: 20,    unit: "ml" },
@@ -853,6 +942,8 @@ const COCKTAILS = [
 				id: "passion",
 				name: "Passion",
 				emoji: "🌺",
+
+				description: "A tropical Daiquiri where passion-fruit syrup replaces the classic sugar.",
 
 				ingredientReplacements: {
 					simpleSyrup: {
@@ -868,6 +959,8 @@ const COCKTAILS = [
 				name: "Dark",
 				emoji: "🟤",
 
+				description: "A deeper Daiquiri with dark rum replacing the white rum.",
+
 				ingredientReplacements: {
 					whiteRum: {
 						ingredient: "darkRum",
@@ -881,6 +974,8 @@ const COCKTAILS = [
 				id: "darkPassion",
 				name: "Dark Passion",
 				emoji: "🥀",
+
+				description: "Dark rum and passion fruit together in the richest Daiquiri variation.",
 
 				ingredientReplacements: {
 					whiteRum: {
@@ -917,6 +1012,9 @@ const COCKTAILS = [
 		mainTaste: "Passion fruit",
 		categories: ["fruity", "sweet", "tropical", "fresh"],
 
+		description: "Licor Beirão and passion fruit: juicy, aromatic and easy-drinking.",
+		tasteProfile: { sweet: 4, sour: 3, strong: 2 },
+
 		ingredients: [
 			{ ingredient: "passionFruitJuice",    amount: 100,    unit: "ml" },
 			{ ingredient: "licorBeirao",          amount: 60,     unit: "ml" },
@@ -944,6 +1042,9 @@ const COCKTAILS = [
 		mainTaste: "Orange",
 		categories: ["fruity", "bubbly", "fresh", "classic"],
 
+		description: "Cold Prosecco and orange juice: simple, bright and bubbly.",
+		tasteProfile: { sweet: 3, sour: 1, strong: 1 },
+
 		ingredients: [
 			{ ingredient: "prosecco",       amount: 75,    unit: "ml" },
 			{ ingredient: "orangeJuice",    amount: 75,    unit: "ml" }
@@ -968,6 +1069,9 @@ const COCKTAILS = [
 		mainSpirit: "Vodka",
 		mainTaste: "Ginger",
 		categories: ["fresh", "sour", "bubbly", "classic"],
+
+		description: "Vodka, lime and spicy ginger beer served long and ice-cold.",
+		tasteProfile: { sweet: 2, sour: 3, strong: 3 },
 
 		ingredients: [
 			{ ingredient: "vodka",          amount: 50,     unit: "ml" },

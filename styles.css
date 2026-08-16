@@ -519,6 +519,22 @@ h1 {
 
 .spirit-line { margin: 4px 0 0; color: var(--muted); font-size: .8rem; }
 
+/* André's shared recommendations (separate from each guest's private heart). */
+.bartender-pick {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 6px;
+  padding: 3px 7px;
+  border: 1px solid rgba(157, 91, 63, .22);
+  border-radius: 999px;
+  background: rgba(157, 91, 63, .08);
+  color: var(--accent);
+  font-size: .69rem;
+  font-weight: 800;
+  letter-spacing: .015em;
+}
+
+
 .heart {
   display: grid;
   place-items: center;
@@ -745,3 +761,51 @@ h1 {
   .toolbar .search { grid-column: auto; }
   .stock-groups { grid-template-columns: 1fr; }
 }
+
+/* Guest/Bartender modes and discovery additions */
+.guest-mode .bartender-only{display:none!important}.guest-mode .menu-controls{justify-content:flex-end}
+.hero-side{display:flex;align-items:flex-end;gap:12px}.hero-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:7px}
+.view-mode-btn,.clear-filters-btn{min-height:39px;border:1px solid var(--line);border-radius:12px;background:rgba(255,253,249,.72);color:var(--muted);padding:8px 11px;cursor:pointer;font-size:.8rem;font-weight:800}.view-mode-btn:hover,.clear-filters-btn:hover{background:#fffdf9;color:var(--ink)}
+.make-me{margin:0 0 15px;padding:15px 16px;border:1px solid rgba(29,36,36,.1);border-radius:var(--radius);background:rgba(255,255,255,.58);box-shadow:0 8px 28px rgba(31,37,35,.05);backdrop-filter:blur(14px)}
+.make-me-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}.make-me-title{font-family:Georgia,"Times New Roman",serif;font-size:1.02rem;font-weight:700}.quick-filters{display:flex;flex-wrap:wrap;gap:7px}
+.quick-filter,.surprise-btn{border:1px solid var(--line);border-radius:999px;background:#fffdf9;color:var(--ink);padding:7px 11px;cursor:pointer;font-size:.8rem;font-weight:800}.quick-filter.active{border-color:#a9c9bf;background:#dfebe7;color:#27564f}.surprise-btn{background:#f6eee5;border-color:#dfcbb6;color:#704c36}
+.toolbar{grid-template-columns:minmax(180px,1.5fr) repeat(5,minmax(130px,.75fr)) auto}.clear-filters-btn{white-space:nowrap;background:transparent}
+.card-actions{display:flex;align-items:center;gap:6px}.copy-recipe-btn{display:grid;place-items:center;width:37px;height:37px;border:1px solid var(--line);border-radius:50%;background:transparent;cursor:pointer}.copy-recipe-btn:hover{background:var(--chip)}
+.cocktail-description{margin:10px 0 0;color:#4f5956;font-family:Georgia,"Times New Roman",serif;font-size:.92rem;line-height:1.42}
+.taste-profile{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 10px;margin:-2px 0 13px;padding:9px 10px;border:1px solid #ebe4d9;border-radius:12px;background:#faf7f1}.taste-row{display:grid;gap:4px}.taste-label{color:var(--muted);font-size:.68rem;font-weight:800;white-space:nowrap}.taste-dots{display:flex;gap:3px}.taste-dot{width:7px;height:7px;border:1px solid #c9c1b5;border-radius:50%}.taste-dot.filled{border-color:var(--accent-2);background:var(--accent-2)}
+.ingredient-name-btn{width:fit-content;max-width:100%;margin:0;padding:0;border:0;border-radius:5px;background:transparent;color:inherit;cursor:pointer;font:inherit;text-align:left;text-decoration:inherit}.ingredient-name-btn:hover{color:var(--accent-2);text-decoration:underline dotted;text-underline-offset:3px}.ingredient-name-btn.active{background:#dfebe7;color:#27564f;box-shadow:0 0 0 3px #dfebe7;text-decoration:none}
+.cocktail-card.ingredient-match{border-color:rgba(47,103,96,.55);box-shadow:0 0 0 2px rgba(47,103,96,.16),0 14px 34px rgba(30,36,34,.10)}.cocktail-card.ingredient-dim{opacity:.22;filter:grayscale(.55)}
+
+/* Surprise Me focus: keep the chosen card clearly above the rest of the page
+   until the guest interacts again. */
+.surprise-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:900;
+  background:rgba(15,18,17,.74);
+  backdrop-filter:blur(2px);
+  -webkit-backdrop-filter:blur(2px);
+  animation:surpriseBackdropIn .18s ease both;
+}
+
+.cocktail-card.surprise-focus{
+  z-index:901;
+  opacity:1 !important;
+  filter:none !important;
+  transform:scale(1.018);
+  border-color:rgba(213,162,97,.9);
+  box-shadow:0 0 0 4px rgba(213,162,97,.20),0 26px 70px rgba(0,0,0,.35);
+}
+
+.cocktail-card.surprise-focus:hover{
+  transform:scale(1.018) translateY(-2px);
+}
+
+@keyframes surpriseBackdropIn{
+  from{opacity:0}
+  to{opacity:1}
+}
+.guest-mode .ingredient-line,.guest-mode .serve-component .ingredient-line{grid-template-columns:1fr}
+@media(max-width:1120px){.toolbar{grid-template-columns:repeat(3,1fr)}.toolbar .search{grid-column:span 2}}
+@media(max-width:720px){.hero-side{width:100%;align-items:center;justify-content:space-between}.quick-filters{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.quick-filters::-webkit-scrollbar{display:none}.quick-filter{flex:0 0 auto}}
+@media(max-width:430px){.hero-side{align-items:stretch;flex-direction:column-reverse}.hero-actions{width:100%}.view-mode-btn{flex:1}.make-me-heading{align-items:stretch;flex-direction:column}.surprise-btn{width:100%}}

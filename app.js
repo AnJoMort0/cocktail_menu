@@ -7,7 +7,16 @@
 
 const STORAGE_KEYS = {
   stock: "homeCocktailBar.stock.v1",
-  favorites: "homeCocktailBar.favorites.v1"
+
+  // Personal favorites belong only to this browser/device.
+  // They are NEVER imported from or exported into the QR share link.
+  favorites: "homeCocktailBar.favorites.v1",
+
+  // Bartender favorites are André's shared recommendations.
+  // These ARE included in QR snapshots.
+  bartenderFavorites: "homeCocktailBar.bartenderFavorites.v1",
+
+  mode: "homeCocktailBar.mode.v1"
 };
 
 const ingredientMap = new Map(INGREDIENTS.map(item => [item.id, item]));
@@ -35,14 +44,24 @@ const els = {
   importToast: document.getElementById("importToast"),
   activeFilters: document.getElementById("activeFilters"),
   resultsCount: document.getElementById("resultsCount"),
-  grid: document.getElementById("cocktailGrid")
+  grid: document.getElementById("cocktailGrid"),
+  modeToggleBtn: document.getElementById("modeToggleBtn"),
+  installBtn: document.getElementById("installBtn"),
+  surpriseBtn: document.getElementById("surpriseBtn"),
+  quickFilters: document.getElementById("quickFilters"),
+  clearFiltersBtn: document.getElementById("clearFiltersBtn")
 };
 
 const sharedStateImported = importSharedStateFromUrl();
 let stock = loadStock();
-let favorites = loadFavorites();
+let favorites = loadFavorites();               // personal, device-only hearts
+let bartenderFavorites = loadBartenderFavorites(); // André's shared picks
+let appMode = loadMode();
 let drinkMultiplier = 1;
 let currentShareUrl = "";
+let highlightedIngredientId = null;
+let deferredInstallPrompt = null;
+let surpriseFocusedDrinkId = null;
 const selectedVariants = new Map(); // intentionally session-only, not localStorage
 
 function bytesToBase64Url(bytes) {
@@ -70,17 +89,28 @@ function importSharedStateFromUrl() {
 
   try {
     const payload = decodeShareState(location.hash.slice(5));
-    if (!payload || payload.v !== 1 || !Array.isArray(payload.out) || !Array.isArray(payload.fav)) return false;
+
+    // v2 separates André's shared picks from each guest's private favorites.
+    // For backwards compatibility, a v1 QR's old `fav` field is interpreted
+    // as bartender favorites rather than overwriting the guest's own hearts.
+    const sharedBartenderFavorites = Array.isArray(payload?.barFav)
+      ? payload.barFav
+      : (Array.isArray(payload?.fav) ? payload.fav : null);
+
+    if (!payload || ![1, 2].includes(payload.v) || !Array.isArray(payload.out) || !sharedBartenderFavorites) return false;
 
     const knownIngredients = new Set(INGREDIENTS.map(item => item.id));
     const unavailable = new Set(payload.out.filter(id => knownIngredients.has(id)));
     const importedStock = Object.fromEntries(INGREDIENTS.map(item => [item.id, !unavailable.has(item.id)]));
 
     const knownDrinks = new Set(COCKTAILS.map(drink => drink.id));
-    const importedFavorites = payload.fav.filter(id => knownDrinks.has(id));
+    const importedBartenderFavorites = sharedBartenderFavorites.filter(id => knownDrinks.has(id));
 
     localStorage.setItem(STORAGE_KEYS.stock, JSON.stringify(importedStock));
-    localStorage.setItem(STORAGE_KEYS.favorites, JSON.stringify(importedFavorites));
+    localStorage.setItem(STORAGE_KEYS.bartenderFavorites, JSON.stringify(importedBartenderFavorites));
+
+    // Deliberately do NOT touch STORAGE_KEYS.favorites here.
+    // A guest keeps their own hearts even after scanning a new QR snapshot.
 
     const cleanUrl = new URL(location.href);
     cleanUrl.hash = "";
@@ -94,11 +124,11 @@ function importSharedStateFromUrl() {
 
 function buildShareState() {
   return {
-    v: 1,
+    v: 2,
     out: INGREDIENTS
       .filter(item => item.trackStock !== false && !isInStock(item.id))
       .map(item => item.id),
-    fav: [...favorites]
+    barFav: [...bartenderFavorites]
   };
 }
 
@@ -153,10 +183,14 @@ function openShareQr() {
 
   currentShareUrl = buildShareUrl();
   renderQrCode(currentShareUrl);
-  const unavailableCount = buildShareState().out.length;
-  els.qrStatus.textContent = unavailableCount
-    ? `${unavailableCount} unavailable ingredient${unavailableCount === 1 ? "" : "s"} included in this snapshot.`
-    : "Everything is currently marked available.";
+  const shareState = buildShareState();
+  const unavailableCount = shareState.out.length;
+  const pickCount = shareState.barFav.length;
+  const availabilityText = unavailableCount
+    ? `${unavailableCount} unavailable ingredient${unavailableCount === 1 ? "" : "s"}`
+    : "Everything marked available";
+  const picksText = `${pickCount} André's pick${pickCount === 1 ? "" : "s"}`;
+  els.qrStatus.textContent = `${availabilityText} · ${picksText}. Guest hearts stay private on their device.`;
   els.copyShareLinkBtn.hidden = false;
   els.shareQrDialog.showModal();
 }
@@ -182,12 +216,18 @@ async function copyShareLink() {
   }
 }
 
-function showImportedToast() {
-  if (!sharedStateImported) return;
+function showToast(message, duration = 2200) {
+  els.importToast.textContent = message;
+  els.importToast.classList.remove("show");
   requestAnimationFrame(() => {
     els.importToast.classList.add("show");
-    setTimeout(() => els.importToast.classList.remove("show"), 2600);
+    window.clearTimeout(showToast.timer);
+    showToast.timer = window.setTimeout(() => els.importToast.classList.remove("show"), duration);
   });
+}
+
+function showImportedToast() {
+  if (sharedStateImported) showToast("Fresh bar status & André's picks loaded ✓", 2800);
 }
 
 function loadStock() {
@@ -215,6 +255,35 @@ function saveStock() {
 
 function saveFavorites() {
   localStorage.setItem(STORAGE_KEYS.favorites, JSON.stringify([...favorites]));
+}
+
+function loadBartenderFavorites() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.bartenderFavorites) || "[]");
+    return new Set(Array.isArray(saved) ? saved : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveBartenderFavorites() {
+  localStorage.setItem(STORAGE_KEYS.bartenderFavorites, JSON.stringify([...bartenderFavorites]));
+}
+
+function activeFavoriteSet() {
+  return appMode === "bartender" ? bartenderFavorites : favorites;
+}
+
+function loadMode() {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.mode) === "bartender" ? "bartender" : "guest";
+  } catch {
+    return "guest";
+  }
+}
+
+function saveMode() {
+  try { localStorage.setItem(STORAGE_KEYS.mode, appMode); } catch {}
 }
 
 function ingredientName(id) {
@@ -480,7 +549,7 @@ function searchableText(drink) {
       line.anyOf ? line.anyOf.map(o => ingredientName(o.ingredient)) : [ingredientName(line.ingredient)]
     );
     const categories = (version.categories || []).map(c => CATEGORY_META[c]?.label || c);
-    return [version.variantName, version.name, version.mainSpirit, version.mainTaste, ...ingredientNames, ...categories];
+    return [version.variantName, version.name, version.mainSpirit, version.mainTaste, version.description || "", ...ingredientNames, ...categories];
   });
   return versionText.join(" ").toLowerCase();
 }
@@ -496,21 +565,31 @@ function getFilteredAndSortedDrinks() {
     if (els.taste.value !== "all" && activeDrink.mainTaste !== els.taste.value) return false;
     if (els.availability.value === "ready" && !ev.available) return false;
     if (els.availability.value === "missing" && ev.available) return false;
-    if (els.availability.value === "favorites" && !favorites.has(drink.id)) return false;
+    if (els.availability.value === "favorites" && !activeFavoriteSet().has(drink.id)) return false;
     return true;
   });
 
   const sortMode = els.sort.value;
   list.sort((a, b) => {
-    // Favorites always float to the top, regardless of the secondary sort.
-    const favDiff = Number(favorites.has(b.id)) - Number(favorites.has(a.id));
-    if (favDiff) return favDiff;
-
-    // Available drinks always stay above unavailable drinks unless explicitly filtering them.
     const activeA = getActiveDrink(a);
     const activeB = getActiveDrink(b);
+
+    // Availability comes first: unavailable favorites never sit above makeable drinks.
     const availabilityDiff = Number(evaluateDrink(activeB).available) - Number(evaluateDrink(activeA).available);
     if (availabilityDiff) return availabilityDiff;
+
+    // The favorites relevant to the current mode float within the same availability group:
+    // guest mode = this guest's private hearts; bartender mode = André's shared picks.
+    const modeFavorites = activeFavoriteSet();
+    const favDiff = Number(modeFavorites.has(b.id)) - Number(modeFavorites.has(a.id));
+    if (favDiff) return favDiff;
+
+    // In guest mode, André's picks still get a secondary recommendation boost
+    // after the guest's own favorites.
+    if (appMode === "guest") {
+      const bartenderFavDiff = Number(bartenderFavorites.has(b.id)) - Number(bartenderFavorites.has(a.id));
+      if (bartenderFavDiff) return bartenderFavDiff;
+    }
 
     if (sortMode === "spirit") return activeA.mainSpirit.localeCompare(activeB.mainSpirit) || a.name.localeCompare(b.name);
     if (sortMode === "category") {
@@ -519,21 +598,29 @@ function getFilteredAndSortedDrinks() {
       return ac.localeCompare(bc) || a.name.localeCompare(b.name);
     }
     if (sortMode === "taste") return activeA.mainTaste.localeCompare(activeB.mainTaste) || a.name.localeCompare(b.name);
-    if (sortMode === "availability") return availabilityDiff || a.name.localeCompare(b.name);
     return a.name.localeCompare(b.name);
   });
-
   return list;
+}
+
+function drinkUsesIngredient(drink, ingredientId) {
+  return drinkVersions(drink).some(version =>
+    allDrinkLines(version).some(line => line.anyOf
+      ? line.anyOf.some(option => option.ingredient === ingredientId)
+      : line.ingredient === ingredientId)
+  );
 }
 
 function renderIngredientLine(line) {
   const available = isInStock(line.ingredient);
   const missingClass = available ? "" : (lineBlocksAvailability(line) ? "missing" : "nonblocking-missing");
   const note = line.blocksAvailability === false ? ' <span title="Does not block cocktail availability">◌</span>' : "";
+  const amount = appMode === "bartender" ? `<span class="amount">${escapeHtml(formatAmount(line.amount, line.unit))}</span>` : "";
+  const activeClass = highlightedIngredientId === line.ingredient ? "active" : "";
   return `
     <div class="ingredient-line ${missingClass}">
-      <span>${escapeHtml(ingredientName(line.ingredient))}${note}</span>
-      <span class="amount">${escapeHtml(formatAmount(line.amount, line.unit))}</span>
+      <button class="ingredient-name-btn ${activeClass}" type="button" data-highlight-ingredient="${escapeAttr(line.ingredient)}" title="Highlight other cocktails using ${escapeAttr(ingredientName(line.ingredient))}">${escapeHtml(ingredientName(line.ingredient))}${note}</button>
+      ${amount}
     </div>
   `;
 }
@@ -543,6 +630,32 @@ function renderChoiceGroup(line) {
     <div class="choice-group">
       <div class="choice-label">${escapeHtml(line.label || "Choose one")}</div>
       ${line.anyOf.map(renderIngredientLine).join("")}
+    </div>
+  `;
+}
+
+const TASTE_PROFILE_META = {
+  sweet: { label: "Sweet", icon: "🍬" },
+  sour: { label: "Sour", icon: "🍋" },
+  strong: { label: "Strong", icon: "💪" },
+  bitter: { label: "Bitter", icon: "🌿" },
+  fruity: { label: "Fruity", icon: "🍓" },
+  fresh: { label: "Fresh", icon: "❄️" }
+};
+
+function renderTasteProfile(drink) {
+  if (!drink.tasteProfile || typeof drink.tasteProfile !== "object") return "";
+  const entries = Object.entries(drink.tasteProfile)
+    .filter(([, value]) => Number.isFinite(Number(value)))
+    .map(([key, value]) => [key, Math.max(0, Math.min(5, Math.round(Number(value))))]);
+  if (!entries.length) return "";
+  return `
+    <div class="taste-profile" aria-label="Taste profile">
+      ${entries.map(([key, value]) => {
+        const meta = TASTE_PROFILE_META[key] || { label: key, icon: "•" };
+        const dots = Array.from({ length: 5 }, (_, index) => `<span class="taste-dot ${index < value ? "filled" : ""}"></span>`).join("");
+        return `<div class="taste-row" title="${escapeAttr(meta.label)}: ${value} out of 5"><span class="taste-label">${meta.icon} ${escapeHtml(meta.label)}</span><span class="taste-dots" aria-hidden="true">${dots}</span></div>`;
+      }).join("")}
     </div>
   `;
 }
@@ -606,49 +719,57 @@ function renderServeComponents(drink) {
 function renderCocktailCard(drink) {
   const activeDrink = getActiveDrink(drink);
   const ev = evaluateDrink(activeDrink);
-  const isFavorite = favorites.has(drink.id);
+  const isPersonalFavorite = favorites.has(drink.id);
+  const isBartenderFavorite = bartenderFavorites.has(drink.id);
+  const isFavorite = appMode === "bartender" ? isBartenderFavorite : isPersonalFavorite;
+  const favoriteLabel = appMode === "bartender"
+    ? (isFavorite ? "Remove from André's picks" : "Add to André's picks")
+    : (isFavorite ? "Remove from my favorites" : "Add to my favorites");
   const statusText = ev.available
     ? (ev.missingNonblocking ? `Ready · ${ev.missingNonblocking} optional item missing` : "Ready to make")
     : `Missing ${ev.missingBlocking} required ${ev.missingBlocking === 1 ? "item" : "items"}`;
+  const highlightClass = highlightedIngredientId ? (drinkUsesIngredient(drink, highlightedIngredientId) ? "ingredient-match" : "ingredient-dim") : "";
+  const description = activeDrink.description ? `<p class="cocktail-description">${escapeHtml(activeDrink.description)}</p>` : "";
 
   return `
-    <article class="cocktail-card ${ev.available ? "" : "unavailable"}" data-drink-id="${escapeAttr(drink.id)}">
+    <article class="cocktail-card ${ev.available ? "" : "unavailable"} ${highlightClass}" data-drink-id="${escapeAttr(drink.id)}">
       <div class="accent-line"></div>
       <div class="card-body">
         <div class="card-top">
           <div>
             <h3 class="cocktail-name">${escapeHtml(drink.name)}</h3>
             <p class="spirit-line">${escapeHtml(activeDrink.mainSpirit)} · ${escapeHtml(activeDrink.mainTaste)}</p>
+            ${isBartenderFavorite ? `<span class="bartender-pick" title="Recommended by André">★ André's pick</span>` : ""}
           </div>
-          <button class="heart ${isFavorite ? "active" : ""}" type="button" data-favorite-id="${escapeAttr(drink.id)}" aria-label="${isFavorite ? "Remove from" : "Add to"} favorites" title="Favorite">${isFavorite ? "♥" : "♡"}</button>
+          <div class="card-actions">
+            ${appMode === "bartender" ? `<button class="copy-recipe-btn" type="button" data-copy-recipe="${escapeAttr(drink.id)}" aria-label="Copy scaled recipe" title="Copy scaled recipe">📋</button>` : ""}
+            <button class="heart ${isFavorite ? "active" : ""}" type="button" data-favorite-id="${escapeAttr(drink.id)}" aria-label="${escapeAttr(favoriteLabel)}" title="${escapeAttr(favoriteLabel)}">${isFavorite ? "♥" : "♡"}</button>
+          </div>
         </div>
-
+        ${description}
         <div class="tags">
           ${activeDrink.categories.map(cat => {
             const meta = CATEGORY_META[cat] || { label: cat, icon: "•" };
             return `<span class="tag" title="${escapeAttr(meta.label)}">${meta.icon} ${escapeHtml(meta.label)}</span>`;
           }).join("")}
         </div>
-
+        ${renderTasteProfile(activeDrink)}
         ${renderVariantPicker(drink, activeDrink)}
-
         <div class="availability ${ev.available ? "good" : "bad"}">${ev.available ? "●" : "○"} ${escapeHtml(statusText)}</div>
-
         <div class="recipe-block">
-          <p class="recipe-title">For ${drinkMultiplier} ${drinkMultiplier === 1 ? "drink" : "drinks"}</p>
+          ${appMode === "bartender" ? `<p class="recipe-title">For ${drinkMultiplier} ${drinkMultiplier === 1 ? "drink" : "drinks"}</p>` : `<p class="recipe-title">Ingredients</p>`}
           <div class="ingredient-lines">
-            ${activeDrink.ingredients.map(line => line.anyOf ? renderChoiceGroup(line) : renderIngredientLine(line)).join("")}
+            ${(activeDrink.ingredients || []).map(line => line.anyOf ? renderChoiceGroup(line) : renderIngredientLine(line)).join("")}
           </div>
         </div>
-
         ${renderServeComponents(activeDrink)}
-
-        <div class="service">
-          <div class="service-row"><span>🥃</span><span><strong>Glass:</strong> ${escapeHtml(activeDrink.glass)}${activeDrink.chilledGlass ? " · chilled" : ""}${activeDrink.straw ? " · with straw" : ""}</span></div>
-          <div class="service-row"><span>🧊</span><span><strong>Ice:</strong> ${escapeHtml(activeDrink.ice)}</span></div>
-          <div class="service-row"><span>↻</span><span><strong>Method:</strong> ${escapeHtml(activeDrink.method)}</span></div>
-          <div class="service-row"><span>🍊</span><span><strong>Garnish:</strong> ${escapeHtml(activeDrink.garnish)}</span></div>
-        </div>
+        ${appMode === "bartender" ? `
+          <div class="service">
+            <div class="service-row"><span>🥃</span><span><strong>Glass:</strong> ${escapeHtml(activeDrink.glass)}${activeDrink.chilledGlass ? " · chilled" : ""}${activeDrink.straw ? " · with straw" : ""}</span></div>
+            <div class="service-row"><span>🧊</span><span><strong>Ice:</strong> ${escapeHtml(activeDrink.ice)}</span></div>
+            <div class="service-row"><span>↻</span><span><strong>Method:</strong> ${escapeHtml(activeDrink.method)}</span></div>
+            <div class="service-row"><span>🍊</span><span><strong>Garnish:</strong> ${escapeHtml(activeDrink.garnish)}</span></div>
+          </div>` : ""}
       </div>
     </article>
   `;
@@ -657,33 +778,35 @@ function renderCocktailCard(drink) {
 function renderCocktails() {
   const allReady = COCKTAILS.filter(c => evaluateDrink(getActiveDrink(c)).available).length;
   els.readyCount.textContent = allReady;
-
   const list = getFilteredAndSortedDrinks();
-  els.resultsCount.textContent = `${list.length} of ${COCKTAILS.length} shown · ${drinkMultiplier}× recipe`;
+  els.resultsCount.textContent = appMode === "bartender" ? `${list.length} of ${COCKTAILS.length} shown · ${drinkMultiplier}× recipe` : `${list.length} of ${COCKTAILS.length} shown`;
   els.multiplier.value = `${drinkMultiplier}×`;
   els.multiplier.textContent = `${drinkMultiplier}×`;
+  els.grid.innerHTML = list.length ? list.map(renderCocktailCard).join("") : `<div class="empty-state"><strong>No cocktails match these filters.</strong><br>Try clearing a filter or restocking an ingredient.</div>`;
 
-  els.grid.innerHTML = list.length
-    ? list.map(renderCocktailCard).join("")
-    : `<div class="empty-state"><strong>No cocktails match these filters.</strong><br>Try clearing a filter or restocking an ingredient.</div>`;
+  els.grid.querySelectorAll("[data-favorite-id]").forEach(button => button.addEventListener("click", e => {
+    const id = e.currentTarget.dataset.favoriteId;
 
-  els.grid.querySelectorAll("[data-favorite-id]").forEach(button => {
-    button.addEventListener("click", e => {
-      const id = e.currentTarget.dataset.favoriteId;
+    if (appMode === "bartender") {
+      bartenderFavorites.has(id) ? bartenderFavorites.delete(id) : bartenderFavorites.add(id);
+      saveBartenderFavorites();
+    } else {
       favorites.has(id) ? favorites.delete(id) : favorites.add(id);
       saveFavorites();
-      renderCocktails();
-    });
-  });
+    }
 
-  els.grid.querySelectorAll("[data-variant-drink]").forEach(button => {
-    button.addEventListener("click", e => {
-      selectedVariants.set(e.currentTarget.dataset.variantDrink, e.currentTarget.dataset.variantId);
-      renderCocktails();
-    });
-  });
-
+    renderCocktails();
+  }));
+  els.grid.querySelectorAll("[data-variant-drink]").forEach(button => button.addEventListener("click", e => {
+    selectedVariants.set(e.currentTarget.dataset.variantDrink, e.currentTarget.dataset.variantId); renderCocktails();
+  }));
+  els.grid.querySelectorAll("[data-highlight-ingredient]").forEach(button => button.addEventListener("click", e => {
+    const id = e.currentTarget.dataset.highlightIngredient;
+    highlightedIngredientId = highlightedIngredientId === id ? null : id; renderCocktails();
+  }));
+  els.grid.querySelectorAll("[data-copy-recipe]").forEach(button => button.addEventListener("click", e => copyScaledRecipe(e.currentTarget.dataset.copyRecipe)));
   renderActiveFilters();
+  updateQuickFilterState();
 }
 
 function renderActiveFilters() {
@@ -693,20 +816,137 @@ function renderActiveFilters() {
   if (els.category.value !== "all") chips.push({ key: "category", label: els.category.options[els.category.selectedIndex].text });
   if (els.spirit.value !== "all") chips.push({ key: "spirit", label: els.spirit.value });
   if (els.taste.value !== "all") chips.push({ key: "taste", label: els.taste.value });
-
+  if (highlightedIngredientId) chips.push({ key: "ingredientHighlight", label: `Highlight: ${ingredientName(highlightedIngredientId)}` });
   els.activeFilters.innerHTML = chips.map(chip => `<button class="filter-chip" type="button" data-clear-filter="${chip.key}">${escapeHtml(chip.label)} ×</button>`).join("");
-  els.activeFilters.querySelectorAll("[data-clear-filter]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const key = btn.dataset.clearFilter;
-      if (key === "search") els.search.value = "";
-      if (key === "availability") els.availability.value = "all";
-      if (key === "category") els.category.value = "all";
-      if (key === "spirit") els.spirit.value = "all";
-      if (key === "taste") els.taste.value = "all";
-      renderCocktails();
-    });
+  els.activeFilters.querySelectorAll("[data-clear-filter]").forEach(btn => btn.addEventListener("click", () => {
+    const key = btn.dataset.clearFilter;
+    if (key === "search") els.search.value = "";
+    if (key === "availability") els.availability.value = "all";
+    if (key === "category") els.category.value = "all";
+    if (key === "spirit") els.spirit.value = "all";
+    if (key === "taste") els.taste.value = "all";
+    if (key === "ingredientHighlight") highlightedIngredientId = null;
+    renderCocktails();
+  }));
+}
+
+function clearFilters() {
+  els.search.value = ""; els.availability.value = "all"; els.category.value = "all"; els.spirit.value = "all"; els.taste.value = "all";
+  highlightedIngredientId = null; renderCocktails();
+}
+
+function updateQuickFilterState() {
+  els.quickFilters.querySelectorAll("[data-quick-category]").forEach(button => {
+    const category = button.dataset.quickCategory;
+    const active = category === "all" ? els.category.value === "all" : els.category.value === category;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", active ? "true" : "false");
   });
 }
+
+function chooseQuickCategory(category) { els.category.value = category === "all" ? "all" : category; renderCocktails(); }
+
+function clearSurpriseFocus() {
+  document.querySelector(".surprise-backdrop")?.remove();
+  document.querySelectorAll(".cocktail-card.surprise-focus").forEach(card => card.classList.remove("surprise-focus"));
+  surpriseFocusedDrinkId = null;
+  document.removeEventListener("pointerdown", dismissSurpriseOnInteraction, true);
+  document.removeEventListener("keydown", dismissSurpriseOnInteraction, true);
+}
+
+function dismissSurpriseOnInteraction() {
+  clearSurpriseFocus();
+}
+
+function focusSurpriseCard(card, drinkId) {
+  clearSurpriseFocus();
+  surpriseFocusedDrinkId = drinkId;
+
+  const backdrop = document.createElement("div");
+  backdrop.className = "surprise-backdrop";
+  backdrop.setAttribute("aria-hidden", "true");
+  document.body.appendChild(backdrop);
+
+  card.classList.add("surprise-focus");
+
+  // pointerdown is used instead of click so the click that triggered Surprise Me
+  // cannot immediately dismiss the newly-created focus state.
+  document.addEventListener("pointerdown", dismissSurpriseOnInteraction, true);
+  document.addEventListener("keydown", dismissSurpriseOnInteraction, true);
+}
+
+function surpriseMe() {
+  const candidates = getFilteredAndSortedDrinks().filter(drink => evaluateDrink(getActiveDrink(drink)).available);
+  if (!candidates.length) { showToast("No ready cocktails match those filters."); return; }
+
+  const drink = candidates[Math.floor(Math.random() * candidates.length)];
+  const readyVersion = drinkVersions(drink).find(version => evaluateDrink(version).available);
+  if (readyVersion) selectedVariants.set(drink.id, readyVersion.variantId);
+
+  renderCocktails();
+
+  requestAnimationFrame(() => {
+    const card = els.grid.querySelector(`[data-drink-id="${CSS.escape(drink.id)}"]`);
+    if (!card) return;
+
+    card.scrollIntoView({ behavior: "smooth", block: "center" });
+    focusSurpriseCard(card, drink.id);
+  });
+}
+
+function recipeLineToText(line) {
+  if (line.anyOf) {
+    const options = line.anyOf.map(option => `  - ${ingredientName(option.ingredient)} — ${formatAmount(option.amount, option.unit)}`).join("\n");
+    return `${line.label || "Choose one"}:\n${options}`;
+  }
+  return `${ingredientName(line.ingredient)} — ${formatAmount(line.amount, line.unit)}`;
+}
+
+function buildRecipeText(drink) {
+  const activeDrink = getActiveDrink(drink);
+  const variantSuffix = Array.isArray(drink.variants) && drink.variants.length ? ` — ${activeDrink.variantName}` : "";
+  const lines = [`${drink.name}${variantSuffix}`, `For ${drinkMultiplier} ${drinkMultiplier === 1 ? "drink" : "drinks"}`, "", "Ingredients:"];
+  (activeDrink.ingredients || []).forEach(line => lines.push(recipeLineToText(line)));
+  for (const section of ["front", "side", "back"]) {
+    if (!Array.isArray(activeDrink[section]) || !activeDrink[section].length) continue;
+    lines.push("", `${SERVE_COMPONENT_META[section].label}:`);
+    activeDrink[section].forEach(line => lines.push(recipeLineToText(line)));
+  }
+  lines.push("", `Glass: ${activeDrink.glass}${activeDrink.chilledGlass ? " · chilled" : ""}${activeDrink.straw ? " · with straw" : ""}`, `Ice: ${activeDrink.ice}`, `Method: ${activeDrink.method}`, `Garnish: ${activeDrink.garnish}`);
+  return lines.join("\n");
+}
+
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); }
+  catch {
+    const textarea = document.createElement("textarea"); textarea.value = text; textarea.style.position = "fixed"; textarea.style.opacity = "0";
+    document.body.appendChild(textarea); textarea.select(); document.execCommand("copy"); textarea.remove();
+  }
+}
+async function copyScaledRecipe(drinkId) {
+  const drink = COCKTAILS.find(item => item.id === drinkId); if (!drink) return;
+  await copyText(buildRecipeText(drink)); showToast(`${drink.name} recipe copied ✓`);
+}
+
+function applyMode() {
+  document.body.classList.toggle("guest-mode", appMode === "guest");
+  document.body.classList.toggle("bartender-mode", appMode === "bartender");
+  els.modeToggleBtn.textContent = appMode === "guest" ? "🍸 Bartender" : "👥 Guest view";
+  els.modeToggleBtn.setAttribute("aria-pressed", appMode === "bartender" ? "true" : "false");
+
+  const favoritesOption = els.availability.querySelector('option[value="favorites"]');
+  if (favoritesOption) {
+    favoritesOption.textContent = appMode === "bartender" ? "André's picks only" : "My favorites only";
+  }
+}
+function toggleMode() { appMode = appMode === "guest" ? "bartender" : "guest"; saveMode(); applyMode(); renderCocktails(); }
+
+function registerPwa() {
+  if ("serviceWorker" in navigator && location.protocol !== "file:") window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js").catch(error => console.warn("Service worker registration failed", error)));
+  window.addEventListener("beforeinstallprompt", event => { event.preventDefault(); deferredInstallPrompt = event; els.installBtn.hidden = false; });
+  window.addEventListener("appinstalled", () => { deferredInstallPrompt = null; els.installBtn.hidden = true; showToast("André's Bar installed ✓"); });
+}
+async function installPwa() { if (!deferredInstallPrompt) return; deferredInstallPrompt.prompt(); await deferredInstallPrompt.userChoice; deferredInstallPrompt = null; els.installBtn.hidden = true; }
 
 function setAllStock(value) {
   for (const item of INGREDIENTS) stock[item.id] = value;
@@ -729,27 +969,23 @@ function escapeAttr(value) { return escapeHtml(value); }
 [els.search, els.availability, els.category, els.spirit, els.taste, els.sort].forEach(el => {
   el.addEventListener(el === els.search ? "input" : "change", renderCocktails);
 });
-
 els.stockAllBtn.addEventListener("click", () => setAllStock(true));
 els.stockNoneBtn.addEventListener("click", () => setAllStock(false));
 els.shareQrBtn.addEventListener("click", openShareQr);
 els.closeQrBtn.addEventListener("click", () => els.shareQrDialog.close());
 els.copyShareLinkBtn.addEventListener("click", copyShareLink);
-els.shareQrDialog.addEventListener("click", event => {
-  if (event.target === els.shareQrDialog) els.shareQrDialog.close();
-});
+els.clearFiltersBtn.addEventListener("click", clearFilters);
+els.surpriseBtn.addEventListener("click", surpriseMe);
+els.modeToggleBtn.addEventListener("click", toggleMode);
+els.installBtn.addEventListener("click", installPwa);
+els.quickFilters.querySelectorAll("[data-quick-category]").forEach(button => button.addEventListener("click", () => chooseQuickCategory(button.dataset.quickCategory)));
+els.shareQrDialog.addEventListener("click", event => { if (event.target === els.shareQrDialog) els.shareQrDialog.close(); });
+els.minus.addEventListener("click", () => { drinkMultiplier = Math.max(1, drinkMultiplier - 1); renderCocktails(); });
+els.plus.addEventListener("click", () => { drinkMultiplier = Math.min(20, drinkMultiplier + 1); renderCocktails(); });
 
-els.minus.addEventListener("click", () => {
-  drinkMultiplier = Math.max(1, drinkMultiplier - 1);
-  renderCocktails();
-});
-
-els.plus.addEventListener("click", () => {
-  drinkMultiplier = Math.min(20, drinkMultiplier + 1);
-  renderCocktails();
-});
-
+applyMode();
 populateFilters();
 renderStock();
 renderCocktails();
 showImportedToast();
+registerPwa();
