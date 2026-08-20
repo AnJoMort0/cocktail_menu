@@ -2133,4 +2133,168 @@ const COCKTAILS = [
 		chilledGlass: false
 	},
 
+	// ===================================================================
+	// SANGRIA HIGHBALL
+	// ===================================================================
+
+	{
+		id: "sangriaHighball",
+		name: "Sangria Highball",
+
+		baseVariantName: "Classic",
+		baseVariantEmoji: "🍷",
+
+		mainSpirit: "Brandy",
+		mainTaste: "Orange",
+		categories: ["fruity", "fresh", "bubbly", "sour"],
+
+		description: "A cocktail-sized take on sangria — brandy, red wine and orange, sharpened with lemon and finished with bubbles.",
+
+		tasteProfile: {
+			sweet:  3,
+			sour:   3,
+			strong: 3,
+			bubbly: 3
+		},
+
+		ingredients: [
+			{ ingredient: "brandy",        amount: 35,    unit: "ml" },
+			{ ingredient: "tripleSec",     amount: 15,    unit: "ml" },
+			{ ingredient: "orangeJuice",   amount: 20,    unit: "ml" },
+			{ ingredient: "lemon",         amount: 20,    unit: "ml" },
+			{ ingredient: "simpleSyrup",   amount: 7.5,   unit: "ml" },
+			{ ingredient: "redWine",       amount: 45,    unit: "ml" },
+			{ ingredient: "soda",          amount: 30,    unit: "ml" }
+		],
+
+		variants: [
+
+
+			// -----------------------------------------------------------
+			// PORTO
+			// -----------------------------------------------------------
+
+			{
+				id: "porto",
+				name: "Porto",
+				emoji: "🍊",
+
+				mainSpirit: "Port",
+				mainTaste: "Orange",
+
+				description: "A richer Sangria Highball with Port, red wine and orange, giving the drink a darker fruit character and a little more weight.",
+
+				tasteProfile: {
+					sweet:  3,
+					sour:   3,
+					strong: 4,
+					bubbly: 3
+				},
+
+				ingredientReplacements: {
+
+					brandy: {
+						ingredient: "brandy",
+						amount: 25,
+						unit: "ml"
+					},
+
+					tripleSec: {
+						ingredient: "tripleSec",
+						amount: 10,
+						unit: "ml"
+					},
+
+					simpleSyrup: {
+						ingredient: "simpleSyrup",
+						amount: 5,
+						unit: "ml"
+					},
+
+					redWine: {
+						ingredient: "redWine",
+						amount: 40,
+						unit: "ml"
+					},
+
+					soda: {
+						ingredient: "soda",
+						amount: 25,
+						unit: "ml"
+					}
+
+				},
+
+				addIngredients: [
+					{ ingredient: "port", amount: 25, unit: "ml" }
+				],
+
+				garnish: "Orange slice"
+			},
+
+
+			// -----------------------------------------------------------
+			// LICOR BEIRÃO
+			// -----------------------------------------------------------
+
+			{
+				id: "beirao",
+				name: "Beirão",
+				emoji: "🇵🇹",
+
+				mainSpirit: "Licor Beirão",
+				mainTaste: "Herbal",
+
+				description: "A distinctly Portuguese version with Licor Beirão bringing sweet herbs and spice to the red wine, citrus and brandy.",
+
+				tasteProfile: {
+					sweet:  4,
+					sour:   3,
+					strong: 3,
+					bubbly: 3
+				},
+
+				ingredientReplacements: {
+
+					brandy: {
+						ingredient: "brandy",
+						amount: 25,
+						unit: "ml"
+					},
+
+					tripleSec: {
+						ingredient: "licorBeirao",
+						amount: 20,
+						unit: "ml"
+					},
+
+					simpleSyrup: null,
+
+					redWine: {
+						ingredient: "redWine",
+						amount: 40,
+						unit: "ml"
+					},
+
+					soda: {
+						ingredient: "soda",
+						amount: 30,
+						unit: "ml"
+					}
+
+				},
+			}
+
+		],
+
+		glass: "Highball",
+		ice: "Cubed ice",
+
+		method: "Shake the brandy, liqueur, orange juice, lemon and syrup with ice. Strain into an ice-filled highball, add the red wine and soda, then give one gentle stir.",
+
+		garnish: "Orange slice + cinnamon stick",
+
+		chilledGlass: false
+	},
+
 ];
