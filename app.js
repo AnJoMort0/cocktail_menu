@@ -21,6 +21,17 @@ const STORAGE_KEYS = {
 
 const ingredientMap = new Map(INGREDIENTS.map(item => [item.id, item]));
 
+const STOCK_GROUP_ORDER = [
+  "Spirits",
+  "Liqueurs",
+  "Wines",
+  "Juice and Purées",
+  "Fresh Ingredients",
+  "Mixers",
+  "Syrups",
+  "Pantry"
+];
+
 const els = {
   stockGroups: document.getElementById("stockGroups"),
   stockAllBtn: document.getElementById("stockAllBtn"),
@@ -432,6 +443,12 @@ function drinkVersions(drink) {
   ];
 }
 
+function drinkHasAvailableVersion(drink) {
+	return drinkVersions(drink).some(
+		version => evaluateDrink(version).available
+	);
+}
+
 function getActiveDrink(drink) {
   const explicitlySelected = selectedVariants.get(drink.id);
   if (explicitlySelected) return resolveDrinkVariant(drink, explicitlySelected);
@@ -503,7 +520,15 @@ function renderStock() {
     grouped.get(item.group).push(item);
   }
 
-  els.stockGroups.innerHTML = [...grouped.entries()].map(([group, items]) => `
+  const orderedGroups = [...grouped.entries()].sort(([groupA], [groupB]) => {
+    const indexA = STOCK_GROUP_ORDER.indexOf(groupA);
+    const indexB = STOCK_GROUP_ORDER.indexOf(groupB);
+    const rankA = indexA === -1 ? Number.MAX_SAFE_INTEGER : indexA;
+    const rankB = indexB === -1 ? Number.MAX_SAFE_INTEGER : indexB;
+    return rankA - rankB || groupA.localeCompare(groupB);
+  });
+
+  els.stockGroups.innerHTML = orderedGroups.map(([group, items]) => `
     <div class="stock-group">
       <h3 class="stock-group-title">${escapeHtml(group)}</h3>
       <div class="stock-list">
@@ -531,8 +556,15 @@ function renderStock() {
 function populateFilters() {
   const categories = [...new Set(COCKTAILS.flatMap(c => c.categories))]
     .sort((a, b) => (CATEGORY_META[a]?.label || a).localeCompare(CATEGORY_META[b]?.label || b));
-  const spirits = [...new Set(COCKTAILS.map(c => c.mainSpirit))].sort();
-  const tastes = [...new Set(COCKTAILS.map(c => c.mainTaste))].sort();
+  const allVersions = COCKTAILS.flatMap(drink => drinkVersions(drink));
+
+  const spirits = [...new Set(
+    allVersions.map(drink => drink.mainSpirit)
+  )].sort();
+
+  const tastes = [...new Set(
+    allVersions.map(drink => drink.mainTaste)
+  )].sort();
 
   els.category.insertAdjacentHTML("beforeend", categories.map(id => {
     const meta = CATEGORY_META[id] || { icon: "•", label: id };
@@ -559,12 +591,13 @@ function getFilteredAndSortedDrinks() {
   let list = COCKTAILS.filter(drink => {
     const activeDrink = getActiveDrink(drink);
     const ev = evaluateDrink(activeDrink);
+    const cocktailAvailable = drinkHasAvailableVersion(drink);
     if (q && !searchableText(drink).includes(q)) return false;
     if (els.category.value !== "all" && !activeDrink.categories.includes(els.category.value)) return false;
     if (els.spirit.value !== "all" && activeDrink.mainSpirit !== els.spirit.value) return false;
     if (els.taste.value !== "all" && activeDrink.mainTaste !== els.taste.value) return false;
-    if (els.availability.value === "ready" && !ev.available) return false;
-    if (els.availability.value === "missing" && ev.available) return false;
+    if (els.availability.value === "ready" && !cocktailAvailable) return false;
+    if (els.availability.value === "missing" && cocktailAvailable) return false;
     if (els.availability.value === "favorites" && !activeFavoriteSet().has(drink.id)) return false;
     return true;
   });
@@ -574,8 +607,11 @@ function getFilteredAndSortedDrinks() {
     const activeA = getActiveDrink(a);
     const activeB = getActiveDrink(b);
 
-    // Availability comes first: unavailable favorites never sit above makeable drinks.
-    const availabilityDiff = Number(evaluateDrink(activeB).available) - Number(evaluateDrink(activeA).available);
+    // The cocktail belongs to the available section as long as ANY of its variants can currently be made. Selecting an unavailable variant should not teleport the whole cocktail into the unavailable section.
+    const availabilityDiff =
+      Number(drinkHasAvailableVersion(b)) -
+      Number(drinkHasAvailableVersion(a));
+
     if (availabilityDiff) return availabilityDiff;
 
     // The favorites relevant to the current mode float within the same availability group:
@@ -584,8 +620,7 @@ function getFilteredAndSortedDrinks() {
     const favDiff = Number(modeFavorites.has(b.id)) - Number(modeFavorites.has(a.id));
     if (favDiff) return favDiff;
 
-    // In guest mode, André's picks still get a secondary recommendation boost
-    // after the guest's own favorites.
+    // In guest mode, André's picks still get a secondary recommendation boost after the guest's own favorites.
     if (appMode === "guest") {
       const bartenderFavDiff = Number(bartenderFavorites.has(b.id)) - Number(bartenderFavorites.has(a.id));
       if (bartenderFavDiff) return bartenderFavDiff;
@@ -634,25 +669,25 @@ function renderChoiceGroup(line) {
   `;
 }
 
-const TASTE_PROFILE_META = {
-  sweet: { label: "Sweet", icon: "🍬" },
-  sour: { label: "Sour", icon: "🍋" },
-  strong: { label: "Strong", icon: "💪" },
-  bitter: { label: "Bitter", icon: "🌿" },
-  fruity: { label: "Fruity", icon: "🍓" },
-  fresh: { label: "Fresh", icon: "❄️" }
-};
+const TASTE_PROFILE_META = [
+  ["sweet",  { label: "Sweet",  icon: "🍬" }],
+  ["sour",   { label: "Sour",   icon: "🍋" }],
+  ["strong", { label: "Strong", icon: "💪" }],
+  ["bubbly", { label: "Bubbly", icon: "🥂" }]
+];
 
 function renderTasteProfile(drink) {
-  if (!drink.tasteProfile || typeof drink.tasteProfile !== "object") return "";
-  const entries = Object.entries(drink.tasteProfile)
-    .filter(([, value]) => Number.isFinite(Number(value)))
-    .map(([key, value]) => [key, Math.max(0, Math.min(5, Math.round(Number(value))))]);
-  if (!entries.length) return "";
+  const profile = drink.tasteProfile && typeof drink.tasteProfile === "object"
+    ? drink.tasteProfile
+    : {};
+
   return `
     <div class="taste-profile" aria-label="Taste profile">
-      ${entries.map(([key, value]) => {
-        const meta = TASTE_PROFILE_META[key] || { label: key, icon: "•" };
+      ${TASTE_PROFILE_META.map(([key, meta]) => {
+        // A missing value falls back to 1 so future hand-edited recipes still
+        // render a complete four-part profile rather than breaking the layout.
+        const rawValue = Number(profile[key] ?? 1);
+        const value = Math.max(1, Math.min(5, Math.round(Number.isFinite(rawValue) ? rawValue : 1)));
         const dots = Array.from({ length: 5 }, (_, index) => `<span class="taste-dot ${index < value ? "filled" : ""}"></span>`).join("");
         return `<div class="taste-row" title="${escapeAttr(meta.label)}: ${value} out of 5"><span class="taste-label">${meta.icon} ${escapeHtml(meta.label)}</span><span class="taste-dots" aria-hidden="true">${dots}</span></div>`;
       }).join("")}
@@ -757,7 +792,13 @@ function renderCocktailCard(drink) {
         ${renderVariantPicker(drink, activeDrink)}
         <div class="availability ${ev.available ? "good" : "bad"}">${ev.available ? "●" : "○"} ${escapeHtml(statusText)}</div>
         <div class="recipe-block">
-          ${appMode === "bartender" ? `<p class="recipe-title">For ${drinkMultiplier} ${drinkMultiplier === 1 ? "drink" : "drinks"}</p>` : `<p class="recipe-title">Ingredients</p>`}
+          ${appMode === "bartender" ? `<p class="recipe-title">
+              For ${drinkMultiplier} ${
+                drinkMultiplier === 1
+                  ? (activeDrink.scaleLabel || "drink")
+                  : `${activeDrink.scaleLabel || "drink"}s`
+              }
+            </p>` : `<p class="recipe-title">Ingredients</p>`}
           <div class="ingredient-lines">
             ${(activeDrink.ingredients || []).map(line => line.anyOf ? renderChoiceGroup(line) : renderIngredientLine(line)).join("")}
           </div>
@@ -775,13 +816,65 @@ function renderCocktailCard(drink) {
   `;
 }
 
+let masonryFrame = 0;
+
+function layoutCocktailWall() {
+  cancelAnimationFrame(masonryFrame);
+  masonryFrame = requestAnimationFrame(() => {
+    const cards = [...els.grid.querySelectorAll(".cocktail-card")];
+
+    if (!cards.length) {
+      els.grid.style.height = "auto";
+      els.grid.classList.remove("wall-ready");
+      return;
+    }
+
+    const gap = 15;
+    const minimumCardWidth = 320;
+    const gridWidth = els.grid.clientWidth;
+    const columnCount = Math.max(1, Math.floor((gridWidth + gap) / (minimumCardWidth + gap)));
+    const cardWidth = (gridWidth - gap * (columnCount - 1)) / columnCount;
+    const columnHeights = Array(columnCount).fill(0);
+
+    els.grid.classList.remove("wall-ready");
+
+    for (const card of cards) {
+      card.style.width = `${cardWidth}px`;
+      card.style.left = "0px";
+      card.style.top = "0px";
+    }
+
+    // Read heights after all widths have been applied, then place each card in
+    // sorted DOM order into the shortest current column.
+    for (const card of cards) {
+      const shortestHeight = Math.min(...columnHeights);
+      const column = columnHeights.indexOf(shortestHeight);
+      card.style.left = `${column * (cardWidth + gap)}px`;
+      card.style.top = `${shortestHeight}px`;
+      columnHeights[column] += card.offsetHeight + gap;
+    }
+
+    els.grid.style.height = `${Math.max(...columnHeights) - gap}px`;
+    els.grid.classList.add("wall-ready");
+  });
+}
+
+let masonryResizeTimer = 0;
+window.addEventListener("resize", () => {
+  window.clearTimeout(masonryResizeTimer);
+  masonryResizeTimer = window.setTimeout(layoutCocktailWall, 80);
+});
+
 function renderCocktails() {
-  const allReady = COCKTAILS.filter(c => evaluateDrink(getActiveDrink(c)).available).length;
+  const allReady = COCKTAILS.filter(
+    drink => drinkHasAvailableVersion(drink)
+  ).length;
   els.readyCount.textContent = allReady;
   const list = getFilteredAndSortedDrinks();
   els.resultsCount.textContent = appMode === "bartender" ? `${list.length} of ${COCKTAILS.length} shown · ${drinkMultiplier}× recipe` : `${list.length} of ${COCKTAILS.length} shown`;
   els.multiplier.value = `${drinkMultiplier}×`;
   els.multiplier.textContent = `${drinkMultiplier}×`;
+  els.grid.classList.remove("wall-ready");
   els.grid.innerHTML = list.length ? list.map(renderCocktailCard).join("") : `<div class="empty-state"><strong>No cocktails match these filters.</strong><br>Try clearing a filter or restocking an ingredient.</div>`;
 
   els.grid.querySelectorAll("[data-favorite-id]").forEach(button => button.addEventListener("click", e => {
@@ -807,6 +900,7 @@ function renderCocktails() {
   els.grid.querySelectorAll("[data-copy-recipe]").forEach(button => button.addEventListener("click", e => copyScaledRecipe(e.currentTarget.dataset.copyRecipe)));
   renderActiveFilters();
   updateQuickFilterState();
+  layoutCocktailWall();
 }
 
 function renderActiveFilters() {
@@ -905,7 +999,9 @@ function recipeLineToText(line) {
 function buildRecipeText(drink) {
   const activeDrink = getActiveDrink(drink);
   const variantSuffix = Array.isArray(drink.variants) && drink.variants.length ? ` — ${activeDrink.variantName}` : "";
-  const lines = [`${drink.name}${variantSuffix}`, `For ${drinkMultiplier} ${drinkMultiplier === 1 ? "drink" : "drinks"}`, "", "Ingredients:"];
+  const scaleLabel = activeDrink.scaleLabel || "drink";
+  const scaledNoun = drinkMultiplier === 1 ? scaleLabel : `${scaleLabel}s`;
+  const lines = [`${drink.name}${variantSuffix}`, `For ${drinkMultiplier} ${scaledNoun}`, "", "Ingredients:"];
   (activeDrink.ingredients || []).forEach(line => lines.push(recipeLineToText(line)));
   for (const section of ["front", "side", "back"]) {
     if (!Array.isArray(activeDrink[section]) || !activeDrink[section].length) continue;
@@ -949,7 +1045,10 @@ function registerPwa() {
 async function installPwa() { if (!deferredInstallPrompt) return; deferredInstallPrompt.prompt(); await deferredInstallPrompt.userChoice; deferredInstallPrompt = null; els.installBtn.hidden = true; }
 
 function setAllStock(value) {
-  for (const item of INGREDIENTS) stock[item.id] = value;
+  for (const item of INGREDIENTS) {
+    if (item.trackStock === false) continue;
+    stock[item.id] = value;
+  }
   saveStock();
   renderStock();
   renderCocktails();

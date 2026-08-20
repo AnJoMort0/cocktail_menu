@@ -473,10 +473,23 @@ h1 {
 .results-count { color: var(--muted); font-size: .87rem; }
 
 .cocktail-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 15px;
-  align-items: start;
+  position: relative;
+  width: 100%;
+  min-height: 1px;
+}
+
+/* Cards are placed by app.js into the shortest available column. This gives
+   the menu a packed "wall" / masonry feel without wasting vertical space. */
+.cocktail-grid .cocktail-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 320px;
+  visibility: hidden;
+}
+
+.cocktail-grid.wall-ready .cocktail-card {
+  visibility: visible;
 }
 
 .cocktail-card {
@@ -725,7 +738,7 @@ h1 {
 .service-row { display: grid; grid-template-columns: 18px 1fr; gap: 6px; align-items: start; }
 
 .empty-state {
-  grid-column: 1 / -1;
+  width: 100%;
   padding: 48px 22px;
   border: 1px dashed #c9c2b5;
   border-radius: 18px;
@@ -753,7 +766,6 @@ h1 {
   .toolbar { grid-template-columns: 1fr 1fr; padding: 12px 16px 16px; }
   .toolbar .search { grid-column: 1 / -1; }
   .multiplier { justify-content: space-between; }
-  .cocktail-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 430px) {
@@ -772,7 +784,7 @@ h1 {
 .toolbar{grid-template-columns:minmax(180px,1.5fr) repeat(5,minmax(130px,.75fr)) auto}.clear-filters-btn{white-space:nowrap;background:transparent}
 .card-actions{display:flex;align-items:center;gap:6px}.copy-recipe-btn{display:grid;place-items:center;width:37px;height:37px;border:1px solid var(--line);border-radius:50%;background:transparent;cursor:pointer}.copy-recipe-btn:hover{background:var(--chip)}
 .cocktail-description{margin:10px 0 0;color:#4f5956;font-family:Georgia,"Times New Roman",serif;font-size:.92rem;line-height:1.42}
-.taste-profile{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 10px;margin:-2px 0 13px;padding:9px 10px;border:1px solid #ebe4d9;border-radius:12px;background:#faf7f1}.taste-row{display:grid;gap:4px}.taste-label{color:var(--muted);font-size:.68rem;font-weight:800;white-space:nowrap}.taste-dots{display:flex;gap:3px}.taste-dot{width:7px;height:7px;border:1px solid #c9c1b5;border-radius:50%}.taste-dot.filled{border-color:var(--accent-2);background:var(--accent-2)}
+.taste-profile{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 10px;margin:-2px 0 13px;padding:9px 10px;border:1px solid #ebe4d9;border-radius:12px;background:#faf7f1}.taste-row{display:grid;gap:4px}.taste-label{color:var(--muted);font-size:.68rem;font-weight:800;white-space:nowrap}.taste-dots{display:flex;gap:3px}.taste-dot{width:7px;height:7px;border:1px solid #c9c1b5;border-radius:50%}.taste-dot.filled{border-color:var(--accent-2);background:var(--accent-2)}
 .ingredient-name-btn{width:fit-content;max-width:100%;margin:0;padding:0;border:0;border-radius:5px;background:transparent;color:inherit;cursor:pointer;font:inherit;text-align:left;text-decoration:inherit}.ingredient-name-btn:hover{color:var(--accent-2);text-decoration:underline dotted;text-underline-offset:3px}.ingredient-name-btn.active{background:#dfebe7;color:#27564f;box-shadow:0 0 0 3px #dfebe7;text-decoration:none}
 .cocktail-card.ingredient-match{border-color:rgba(47,103,96,.55);box-shadow:0 0 0 2px rgba(47,103,96,.16),0 14px 34px rgba(30,36,34,.10)}.cocktail-card.ingredient-dim{opacity:.22;filter:grayscale(.55)}
 
@@ -809,3 +821,13 @@ h1 {
 @media(max-width:1120px){.toolbar{grid-template-columns:repeat(3,1fr)}.toolbar .search{grid-column:span 2}}
 @media(max-width:720px){.hero-side{width:100%;align-items:center;justify-content:space-between}.quick-filters{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.quick-filters::-webkit-scrollbar{display:none}.quick-filter{flex:0 0 auto}}
 @media(max-width:430px){.hero-side{align-items:stretch;flex-direction:column-reverse}.hero-actions{width:100%}.view-mode-btn{flex:1}.make-me-heading{align-items:stretch;flex-direction:column}.surprise-btn{width:100%}}
+
+
+/* Packed cocktail wall */
+.cocktail-grid.wall-ready .cocktail-card {
+  transition: opacity .18s ease, transform .18s ease, filter .18s ease, box-shadow .18s ease;
+}
+
+@media (max-width: 355px) {
+  .cocktail-grid .cocktail-card { width: 100%; }
+}

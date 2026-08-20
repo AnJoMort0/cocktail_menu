@@ -4,39 +4,60 @@ A guest-facing home cocktail menu and bartender reference.
 
 Most menu changes only require editing `menu.js`. It contains ingredients, recipes, measurements, descriptions, taste profiles, categories, variants, glass/ice/garnish/straw details, alternatives, and side/front/back serves.
 
-## New menu fields
+## Stock groups
+
+The stock panel is intentionally split into these groups:
+
+- Spirits
+- Liqueurs
+- Wines
+- Juice and Purées
+- Fresh Ingredients
+- Mixers
+- Syrups
+- Pantry
+
+New ingredients default to available the first time the updated menu is opened.
+
+## Taste profiles
+
+Every drink uses the same four 1–5 guest-friendly scales:
 
 ```js
-description: "Bright, fresh and easy-drinking.",
-tasteProfile: { sweet: 2, sour: 4, strong: 3 },
+tasteProfile: { sweet: 2, sour: 4, strong: 3, bubbly: 1 },
 ```
 
-Taste profile values are optional and use a 1–5 scale.
+The four displayed scales are **Sweet, Sour, Strong, and Bubbly**. Sangria variants that materially change the taste can override their own profile; other variants inherit the base profile.
 
-Variants can replace or add ingredients, and can also directly override `description`, `tasteProfile`, `glass`, `ice`, `method`, `garnish`, `straw`, `front`, `side`, or `back`.
+## Sangria
+
+`menu.js` includes Sangria as one cocktail card with many variants rather than many duplicate cards. It uses `scaleLabel: "jug"`, so Bartender view scales it as 1 jug, 2 jugs, etc. The variants can replace wines/spirits, replace ingredients inside `anyOf` groups, add ingredients, and override descriptions, taste profiles, garnish, and other presentation fields.
+
+## Packed cocktail wall
+
+Cocktail cards use a masonry-style packed wall. The app still sorts the cocktail array first (including availability/favorite priority) and then places each sorted card into the shortest current column. This keeps large cards such as Sangria from creating empty grid rows.
 
 ## Guest / Bartender view
 
 A new browser starts in Guest view. It hides stock controls, exact measurements, preparation instructions, service details and copy-recipe buttons. Tap **🍸 Bartender** to reveal them. The preferred view is saved locally on that browser.
 
-
 ## Favorites and QR sharing
 
 Favorites are deliberately split in two:
 
-- **Guest favorites** are the hearts a person adds in Guest view. They stay private in that browser's `localStorage` and are never sent by QR.
-- **André's picks** are the hearts added in Bartender view. They are included in the QR snapshot together with current stock availability.
+- **Guest favorites** are hearts a person adds in Guest view. They stay private in that browser's `localStorage` and are never sent by QR.
+- **André's picks** are hearts added in Bartender view. They are included in the QR snapshot together with current stock availability.
 
-Scanning a QR updates the shared stock snapshot and André's picks, but it **does not overwrite the guest's own favorites**. In Guest view, a shared recommendation is shown as **★ André's pick**, while the heart remains available for that guest's personal preference.
+Scanning a QR updates the shared stock snapshot and André's picks, but it **does not overwrite the guest's own favorites**.
 
 ## Install as an app
 
-The project now includes `manifest.webmanifest`, `service-worker.js`, and app icons. When hosted on GitHub Pages, supported browsers can install it to the home screen and reopen the cached site offline.
+The project includes `manifest.webmanifest`, `service-worker.js`, and app icons. When hosted on GitHub Pages, supported browsers can install it to the home screen and reopen the cached site offline.
 
 - Chrome / Edge / Android: use the **Install app** button when it appears, or the browser's Install/Add to Home Screen command.
 - iPhone / iPad: open the GitHub Pages site in Safari → Share → Add to Home Screen.
 
-GitHub Pages already provides HTTPS, which is required for service workers. The service worker is network-first, so online visits fetch the latest GitHub Pages files while offline visits use the most recently cached version.
+The service worker is network-first, so online visits fetch the latest GitHub Pages files while offline visits use the most recently cached version.
 
 ## Files
 

@@ -1,1 +1,24 @@
-{"name":"André's Bar","short_name":"André's Bar","description":"André's home cocktail menu and bar stock tracker.","start_url":"./","scope":"./","display":"standalone","background_color":"#f3f0e9","theme_color":"#111416","icons":[{"src":"icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},{"src":"icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}
+{
+  "name": "André's Bar",
+  "short_name": "André's Bar",
+  "description": "André's home cocktail menu and bar stock tracker.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f0e9",
+  "theme_color": "#111416",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
