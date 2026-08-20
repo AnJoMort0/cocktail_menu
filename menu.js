@@ -96,6 +96,7 @@ const INGREDIENTS = [
 	{ id: "gin",                    name: "Gin",                         group: "Spirits" },
 	{ id: "vodka",                  name: "Vodka",                       group: "Spirits" },
 	{ id: "vanillaVodka",           name: "Vanilla vodka",               group: "Spirits" },
+	{ id: "cinnamonVodka",   		name: "Cinnamon vodka",   			 group: "Spirits" },
 	{ id: "whiteRum",               name: "White rum",                   group: "Spirits" },
 	{ id: "darkRum",                name: "Dark rum",                    group: "Spirits" },
 	{ id: "tequila",                name: "Tequila",                     group: "Spirits" },
@@ -144,6 +145,7 @@ const INGREDIENTS = [
 	{ id: "cranberryJuice",         name: "Cranberry juice",             group: "Juice and Purées" },
 	{ id: "passionFruitPuree",      name: "Passion-fruit purée",         group: "Juice and Purées" },
 	{ id: "passionFruitJuice",      name: "Passion-fruit juice",         group: "Juice and Purées" },
+	{ id: "appleJuice",      		name: "Apple juice",      			 group: "Juice and Purées" },
 
 
 	// -------------------------------------------------------------------
@@ -334,7 +336,47 @@ const COCKTAILS = [
 						unit: "ml"
 					}
 				}
-			}
+			},
+
+			{
+				id: "christmas",
+				name: "Christmas",
+				emoji: "🎄",
+
+				mainTaste: "Coffee",
+
+				description: "Espresso, vanilla and coffee liqueur with a small aromatic flash of cinnamon.",
+
+				tasteProfile: {
+					sweet:  3,
+					sour:   1,
+					strong: 4,
+					bubbly: 1
+				},
+
+				ingredientReplacements: {
+
+					vodka: {
+						ingredient: "vodka",
+						amount: 30,
+						unit: "ml"
+					},
+
+					simpleSyrup: {
+						ingredient: "vanillaSyrup",
+						amount: 7.5,
+						unit: "ml"
+					}
+
+				},
+
+				addIngredients: [
+					{ ingredient: "cinnamonVodka", amount: 5, unit: "ml" }
+				],
+
+				garnish: "3 coffee beans"
+			},
+
 		],
 
 		glass: "Coupe / Martini",
@@ -863,12 +905,21 @@ const COCKTAILS = [
 		id: "pruneOldFashioned",
 		name: "Prune Old Fashioned",
 
+		baseVariantName: "Classic",
+		baseVariantEmoji: "🥃",
+
 		mainSpirit: "Whisky",
 		mainTaste: "Alcool",
 		categories: ["fruity", "strong", "classic"],
 
 		description: "Whisky and vieille prune: deep, fruity and unapologetically spirit-forward.",
-		tasteProfile: { sweet: 3, sour: 1, strong: 5, bubbly: 1 },
+
+		tasteProfile: {
+			sweet:  3,
+			sour:   1,
+			strong: 5,
+			bubbly: 1
+		},
 
 		ingredients: [
 			{ ingredient: "whisky",          amount: 50,    unit: "ml" },
@@ -876,10 +927,73 @@ const COCKTAILS = [
 			{ ingredient: "simpleSyrup",     amount: 10,    unit: "ml" }
 		],
 
+
+		// ===================================================================
+		// VARIANTS
+		// ===================================================================
+
+		variants: [
+
+
+			// -----------------------------------------------------------
+			// WINTER
+			// -----------------------------------------------------------
+
+			{
+				id: "winter",
+				name: "Winter",
+				emoji: "❄️",
+
+				mainSpirit: "Whisky",
+				mainTaste: "Plum",
+
+				description: "A wintery Prune Old Fashioned with whisky, vieille prune and a restrained aromatic touch of cinnamon.",
+
+				tasteProfile: {
+					sweet:  3,
+					sour:   1,
+					strong: 5,
+					bubbly: 1
+				},
+
+				ingredientReplacements: {
+
+					whisky: {
+						ingredient: "whisky",
+						amount: 45,
+						unit: "ml"
+					},
+
+					simpleSyrup: {
+						ingredient: "simpleSyrup",
+						amount: 7.5,
+						unit: "ml"
+					}
+
+				},
+
+				addIngredients: [
+					{ ingredient: "cinnamonVodka", amount: 5, unit: "ml" }
+				],
+
+				garnish: "Orange peel"
+			}
+
+		],
+
+
+		// ===================================================================
+		// SERVING
+		// ===================================================================
+
 		glass: "Old Fashioned",
+
 		ice: "One large cube",
+
 		method: "Stir with ice and serve over fresh ice.",
+
 		garnish: "Orange peel",
+
 		chilledGlass: false
 	},
 
@@ -2283,7 +2397,59 @@ const COCKTAILS = [
 					}
 
 				},
-			}
+			},
+
+			{
+				id: "natal",
+				name: "Natal",
+				emoji: "🎄",
+
+				mainSpirit: "Brandy",
+				mainTaste: "Apple",
+
+				description: "A Christmas Sangria Highball with red wine, apple, orange and a restrained cinnamon warmth.",
+
+				tasteProfile: {
+					sweet:  3,
+					sour:   2,
+					strong: 3,
+					bubbly: 3
+				},
+
+				ingredientReplacements: {
+
+					brandy: {
+						ingredient: "brandy",
+						amount: 30,
+						unit: "ml"
+					},
+
+					orangeJuice: {
+						ingredient: "appleJuice",
+						amount: 25,
+						unit: "ml"
+					},
+
+					lemon: {
+						ingredient: "lemon",
+						amount: 15,
+						unit: "ml"
+					},
+
+					simpleSyrup: {
+						ingredient: "vanillaSyrup",
+						amount: 5,
+						unit: "ml"
+					}
+
+				},
+
+				addIngredients: [
+					{ ingredient: "cinnamonVodka", amount: 5, unit: "ml" }
+				],
+
+				garnish: "Orange slice"
+			},
 
 		],
 
@@ -2296,5 +2462,176 @@ const COCKTAILS = [
 
 		chilledGlass: false
 	},
+
+
+	// ===================================================================
+	// APPLE PIE SOUR
+	// ===================================================================
+
+	{
+		id: "applePieSour",
+		name: "Apple Pie Sour",
+
+		mainSpirit: "Vanilla vodka",
+		mainTaste: "Apple",
+		categories: ["sweet", "sour", "fruity"],
+
+		description: "Apple, vanilla and a careful touch of cinnamon sharpened with fresh lemon.",
+
+		tasteProfile: {
+			sweet:  3,
+			sour:   3,
+			strong: 3,
+			bubbly: 1
+		},
+
+		ingredients: [
+			{ ingredient: "vanillaVodka",     amount: 35,   unit: "ml" },
+			{ ingredient: "cinnamonVodka",    amount: 5,    unit: "ml" },
+			{ ingredient: "appleJuice",       amount: 40,   unit: "ml" },
+			{ ingredient: "lemon",            amount: 20,   unit: "ml" },
+			{ ingredient: "simpleSyrup",      amount: 5,    unit: "ml" },
+
+			{
+				ingredient: "eggWhite",
+				amount: 20,
+				unit: "ml",
+				blocksAvailability: false
+			}
+		],
+
+		glass: "Coupe",
+		ice: "Shaken with ice, served without ice",
+
+		method: "Shake everything very hard with ice and fine-strain. If using egg white, dry-shake first for extra foam.",
+
+		garnish: "Thin apple slice",
+
+		chilledGlass: true
+	},
+
+
+	// ===================================================================
+	// APPLE CINNAMON MULE
+	// ===================================================================
+
+	{
+		id: "appleCinnamonMule",
+		name: "Apple Cinnamon Mule",
+
+		mainSpirit: "Vodka",
+		mainTaste: "Apple",
+		categories: ["fruity", "fresh", "bubbly"],
+
+		description: "Crisp apple, ginger and a small hit of cinnamon in a bright festive highball.",
+
+		tasteProfile: {
+			sweet:  3,
+			sour:   2,
+			strong: 2,
+			bubbly: 4
+		},
+
+		ingredients: [
+			{ ingredient: "vodka",            amount: 30,   unit: "ml" },
+			{ ingredient: "cinnamonVodka",    amount: 5,    unit: "ml" },
+			{ ingredient: "appleJuice",       amount: 45,   unit: "ml" },
+			{ ingredient: "lemon",            amount: 10,   unit: "ml" },
+			{ ingredient: "gingerBeer",       amount: 70,   unit: "ml" }
+		],
+
+		glass: "Highball",
+		straw: true,
+		ice: "Cubed ice",
+
+		method: "Build the vodka, cinnamon vodka, apple juice and lemon over ice. Top with ginger beer and stir gently.",
+
+		garnish: "Apple slice",
+
+		chilledGlass: false
+	},
+
+
+	// ===================================================================
+	// HOT APPLE CIDER
+	// ===================================================================
+
+	{
+		id: "hotAppleCider",
+		name: "Hot Apple Cider",
+
+		mainSpirit: "Dark rum",
+		mainTaste: "Apple",
+		categories: ["sweet", "fruity"],
+
+		description: "Hot apple with dark rum, vanilla and a concentrated cinnamon warmth.",
+
+		tasteProfile: {
+			sweet:  4,
+			sour:   1,
+			strong: 2,
+			bubbly: 1
+		},
+
+		ingredients: [
+			{ ingredient: "appleJuice",       amount: 150,  unit: "ml" },
+			{ ingredient: "darkRum",          amount: 25,   unit: "ml" },
+			{ ingredient: "cinnamonVodka",    amount: 5,    unit: "ml" },
+			{ ingredient: "lemon",            amount: 10,   unit: "ml" },
+			{ ingredient: "vanillaSyrup",     amount: 5,    unit: "ml" }
+		],
+
+		glass: "Heatproof mug",
+		ice: "No ice · served hot",
+
+		method: "Gently heat the apple juice, lemon and vanilla syrup without boiling. Pour into a heatproof mug, then stir in the dark rum and cinnamon vodka.",
+
+		garnish: "Apple slice + cinnamon stick",
+
+		chilledGlass: false
+	},
+
+
+	// ===================================================================
+	// VIN CHAUD TWIST
+	// ===================================================================
+
+	{
+		id: "vinChaudTwist",
+		name: "Vin Chaud Twist",
+
+		mainSpirit: "Red wine",
+		mainTaste: "Orange",
+		categories: ["fruity", "sweet"],
+
+		description: "A cocktail-sized vin chaud with red wine, Port, brandy, orange and a precise touch of cinnamon vodka.",
+
+		tasteProfile: {
+			sweet:  3,
+			sour:   1,
+			strong: 3,
+			bubbly: 1
+		},
+
+		ingredients: [
+			{ ingredient: "redWine",          amount: 120,  unit: "ml" },
+			{ ingredient: "port",             amount: 15,   unit: "ml" },
+			{ ingredient: "brandy",           amount: 15,   unit: "ml" },
+			{ ingredient: "orangeJuice",      amount: 20,   unit: "ml" },
+			{ ingredient: "cinnamonVodka",    amount: 5,    unit: "ml" },
+			{ ingredient: "simpleSyrup",      amount: 5,    unit: "ml" }
+		],
+
+		glass: "Heatproof wine glass / mug",
+		ice: "No ice · served hot",
+
+		method: "Gently heat the red wine, orange juice and syrup without boiling. Remove from the heat, stir in the Port, brandy and cinnamon vodka, and serve immediately.",
+
+		garnish: "Orange slice",
+
+		chilledGlass: false
+	},
+
+
 
 ];
