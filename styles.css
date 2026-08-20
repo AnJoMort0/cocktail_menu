@@ -6,6 +6,8 @@
   --muted: #66706d;
   --line: #ddd8cd;
   --accent: #9d5b3f;
+  --accent-mid: #d5a261;
+  --accent-purple: #b88678;
   --accent-2: #2f6760;
   --good: #2f725c;
   --warn: #9a6432;
@@ -23,13 +25,41 @@ html { scroll-behavior: smooth; }
 body {
   margin: 0;
   min-height: 100vh;
+  position: relative;
+  isolation: isolate;
   color: var(--ink);
-  background:
-    radial-gradient(circle at 12% 0%, rgba(157, 91, 63, 0.13), transparent 28rem),
-    radial-gradient(circle at 88% 10%, rgba(47, 103, 96, 0.13), transparent 30rem),
-    var(--bg);
+  background-color: var(--bg);
   font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   line-height: 1.45;
+}
+
+/* Two lightweight background layers. Only their opacity changes when the
+   theme toggles; there are no moving gradients, filters or transforms. */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  transition: opacity .28s ease;
+}
+
+body::before {
+  opacity: 1;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(157, 91, 63, .13), transparent 28rem),
+    radial-gradient(circle at 88% 10%, rgba(47, 103, 96, .13), transparent 30rem),
+    var(--bg);
+}
+
+body::after {
+  opacity: 0;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(255, 79, 163, .12), transparent 28rem),
+    radial-gradient(circle at 80% 4%, rgba(154, 92, 255, .16), transparent 32rem),
+    radial-gradient(circle at 92% 42%, rgba(85, 221, 255, .09), transparent 30rem),
+    #090711;
 }
 
 button, input, select { font: inherit; }
@@ -65,6 +95,65 @@ h1 {
   line-height: .95;
   letter-spacing: -.045em;
   font-weight: 700;
+}
+
+/* Header brand lockup */
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  min-width: 0;
+}
+
+.brand-mark {
+  flex: 0 0 auto;
+  width: clamp(58px, 6.6vw, 82px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  padding: 5px;
+  border: 1px solid rgba(29, 36, 36, .12);
+  border-radius: 24%;
+  background: rgba(255, 253, 248, .62);
+  box-shadow: 0 10px 28px rgba(31, 37, 35, .10);
+}
+
+.brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 20%;
+  object-fit: cover;
+}
+
+.brand-copy { min-width: 0; }
+
+.brand-copy .eyebrow { margin-bottom: 3px; }
+
+.brand-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .12em;
+}
+
+.brand-andre { color: var(--ink); }
+
+.brand-bar {
+  color: var(--accent);
+  background: linear-gradient(105deg, var(--accent) 10%, var(--accent-2) 92%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+}
+
+.brand-tagline {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 650;
+  letter-spacing: .035em;
 }
 
 .hero-stat {
@@ -511,7 +600,7 @@ h1 {
 
 .cocktail-card.unavailable .cocktail-name { text-decoration: line-through; text-decoration-thickness: 1.5px; }
 
-.accent-line { height: 5px; background: linear-gradient(90deg, var(--accent), #d5a261, var(--accent-2)); }
+.accent-line { height: 5px; background: linear-gradient(90deg, var(--accent), var(--accent-mid), var(--accent-purple), var(--accent-2)); background-size: 180% 100%; background-position: 0% 50%; }
 
 .card-body { padding: 18px; }
 
@@ -755,6 +844,8 @@ h1 {
 @media (max-width: 720px) {
   .app-shell { width: min(100% - 16px, 1450px); padding-top: 18px; }
   .hero { align-items: flex-start; flex-direction: column; }
+  .brand-lockup { gap: 12px; }
+  .brand-tagline { margin-top: 5px; }
   .hero-stat { text-align: left; }
   .collapsible-panel > summary { padding: 14px 16px; }
   .collapsible-content { padding: 0 16px 16px; }
@@ -769,6 +860,9 @@ h1 {
 }
 
 @media (max-width: 430px) {
+  .brand-mark { width: 58px; border-radius: 16px; padding: 4px; }
+  .brand-title { font-size: clamp(2.25rem, 13vw, 3.15rem); }
+  .brand-tagline { font-size: .72rem; }
   .toolbar { grid-template-columns: 1fr; }
   .toolbar .search { grid-column: auto; }
   .stock-groups { grid-template-columns: 1fr; }
@@ -830,4 +924,316 @@ h1 {
 
 @media (max-width: 355px) {
   .cocktail-grid .cocktail-card { width: 100%; }
+}
+
+
+/* ======================================================================
+   DARK THEME — NEON SUNSET / CITY
+   The theme is device-local and toggled by app.js on <html>.
+   ====================================================================== */
+
+html.dark-theme {
+  color-scheme: dark;
+
+  /* Deep night-city surfaces */
+  --bg: #090711;
+  --panel: rgba(20, 16, 38, 0.88);
+  --panel-solid: #141124;
+  --ink: #f7f3ff;
+  --muted: #aaa4c2;
+  --line: #39324f;
+  --chip: #25203b;
+
+  /* Neon sunset palette */
+  --accent: #ff7849;      /* sunset orange */
+  --accent-mid: #ff4fa3;  /* hot pink */
+  --accent-purple: #9a5cff; /* neon violet */
+  --accent-2: #55ddff;    /* electric cyan */
+  --good: #56f2bd;        /* neon mint */
+  --warn: #ffb24c;        /* amber */
+  --bad: #ff5f8f;         /* hot pink */
+
+  --shadow: 0 20px 56px rgba(0, 0, 0, .38);
+}
+
+html.dark-theme body::before { opacity: 0; }
+html.dark-theme body::after { opacity: 1; }
+
+html.dark-theme .accent-line {
+  box-shadow: 0 1px 10px rgba(154, 92, 255, .24);
+}
+
+html.dark-theme .hero-stat {
+  border-color: rgba(224, 211, 255, .13);
+  background: rgba(23, 18, 43, .72);
+}
+
+html.dark-theme .brand-mark {
+  border-color: rgba(154, 92, 255, .34);
+  background: rgba(18, 13, 34, .82);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .32), 0 0 22px rgba(85, 221, 255, .08);
+}
+
+html.dark-theme .brand-bar {
+  background-image: linear-gradient(105deg, var(--accent) 0%, var(--accent-mid) 38%, var(--accent-purple) 68%, var(--accent-2) 100%);
+}
+
+html.dark-theme .panel,
+html.dark-theme .make-me {
+  border-color: rgba(224, 211, 255, .12);
+}
+
+html.dark-theme .collapsible-content,
+html.dark-theme .toolbar {
+  border-color: rgba(224, 211, 255, .08);
+}
+
+html.dark-theme .btn,
+html.dark-theme .control,
+html.dark-theme .multiplier,
+html.dark-theme .qr-action,
+html.dark-theme .view-mode-btn,
+html.dark-theme .clear-filters-btn,
+html.dark-theme .quick-filter {
+  background: #19152c;
+  color: var(--ink);
+  border-color: #3a3352;
+}
+
+html.dark-theme .btn:hover,
+html.dark-theme .share-qr-btn:hover,
+html.dark-theme .view-mode-btn:hover,
+html.dark-theme .clear-filters-btn:hover,
+html.dark-theme .quick-filter:hover {
+  background: #211a38;
+  border-color: #7255a2;
+  color: var(--ink);
+}
+
+html.dark-theme .control:focus {
+  border-color: #55ddff;
+  box-shadow: 0 0 0 3px rgba(85, 221, 255, .15), 0 0 18px rgba(85, 221, 255, .08);
+}
+
+html.dark-theme .stock-group {
+  background: rgba(20, 17, 36, .78);
+  border-color: #38314c;
+}
+
+html.dark-theme .stock-item:hover {
+  background: rgba(85, 221, 255, .09);
+}
+
+html.dark-theme .stock-item.off,
+html.dark-theme .ingredient-line.missing,
+html.dark-theme .ingredient-line.nonblocking-missing {
+  color: #77718d;
+}
+
+html.dark-theme .share-qr-btn {
+  background: rgba(25, 21, 44, .84);
+  color: #b6afce;
+  border-color: #3a3352;
+}
+
+html.dark-theme .qr-dialog {
+  background: #141124;
+}
+
+/* Keep the QR itself white for reliable scanning. */
+html.dark-theme .qr-code-wrap {
+  background: #fff;
+  border-color: #4a4262;
+}
+
+/* Purple/cyan selection language replaces the light-theme green. */
+html.dark-theme .filter-chip,
+html.dark-theme .quick-filter.active,
+html.dark-theme .variant-btn.active,
+html.dark-theme .ingredient-name-btn.active {
+  background: #2c174d;
+  border-color: #9a5cff;
+  color: #decfff;
+  box-shadow: 0 0 18px rgba(154, 92, 255, .10);
+}
+
+html.dark-theme .quick-filter.active {
+  background-color: rgba(154, 92, 255, .22);
+  border-color: #8f70ff;
+}
+
+html.dark-theme .ingredient-name-btn.active {
+  color: #9beaff;
+  background: rgba(85, 221, 255, .12);
+  box-shadow: 0 0 0 3px rgba(85, 221, 255, .12), 0 0 18px rgba(85, 221, 255, .10);
+}
+
+html.dark-theme .bartender-pick {
+  color: #ffae87;
+  border-color: rgba(255, 120, 73, .45);
+  background: rgba(255, 120, 73, .10);
+  box-shadow: inset 0 0 14px rgba(255, 120, 73, .04);
+}
+
+html.dark-theme .cocktail-card {
+  border-color: rgba(205, 190, 255, .13);
+  background: #141124;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .31);
+}
+
+html.dark-theme .heart {
+  color: #9d96b1;
+}
+
+html.dark-theme .heart.active {
+  color: #ff8fbe;
+  background: rgba(255, 79, 163, .15);
+  border-color: rgba(255, 79, 163, .50);
+  box-shadow: 0 0 16px rgba(255, 79, 163, .10);
+}
+
+html.dark-theme .variant-picker {
+  border-color: #3b3451;
+  background: #18142a;
+}
+
+html.dark-theme .variant-picker-label {
+  color: #c8bfdc;
+}
+
+html.dark-theme .variant-btn {
+  border-color: #463d5d;
+  background: #1d1831;
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .24);
+}
+
+html.dark-theme .variant-btn:hover {
+  border-color: #765ba1;
+  background: #241b3b;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, .30);
+}
+
+html.dark-theme .availability.good {
+  background: rgba(86, 242, 189, .12);
+  color: #91f8d5;
+  border-color: rgba(86, 242, 189, .18);
+}
+
+html.dark-theme .availability.bad {
+  background: rgba(255, 95, 143, .12);
+  color: #ff9cba;
+  border-color: rgba(255, 95, 143, .18);
+}
+
+html.dark-theme .choice-group,
+html.dark-theme .serve-component {
+  background: #18142a;
+  border-color: #39324d;
+}
+
+html.dark-theme .choice-group {
+  border-left-color: #9a5cff;
+}
+
+html.dark-theme .empty-state {
+  border-color: #4a4163;
+  background: rgba(20, 16, 38, .52);
+}
+
+html.dark-theme .make-me {
+  background: rgba(20, 16, 38, .74);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, .26);
+}
+
+html.dark-theme .surprise-btn {
+  background-color: rgba(255, 79, 163, .13);
+  border-color: rgba(255, 120, 73, .48);
+  color: #ffc0a3;
+}
+
+html.dark-theme .cocktail-description {
+  color: #c7c0d8;
+}
+
+html.dark-theme .taste-profile {
+  border-color: #39324f;
+  background: #18142a;
+}
+
+html.dark-theme .taste-dot {
+  border-color: #5a506f;
+}
+
+html.dark-theme .taste-dot.filled {
+  border-color: #55ddff;
+  background: #55ddff;
+  box-shadow: 0 0 6px rgba(85, 221, 255, .28);
+}
+
+html.dark-theme .cocktail-card.ingredient-match {
+  border-color: rgba(85, 221, 255, .72);
+  box-shadow: 0 0 0 2px rgba(85, 221, 255, .18), 0 0 24px rgba(85, 221, 255, .10), 0 14px 36px rgba(0, 0, 0, .30);
+}
+
+html.dark-theme .cocktail-card.surprise-focus {
+  border-color: rgba(255, 120, 73, .95);
+  box-shadow:
+    0 0 0 3px rgba(255, 120, 73, .18),
+    0 0 30px rgba(154, 92, 255, .18),
+    0 26px 70px rgba(0, 0, 0, .50);
+}
+
+html.dark-theme select option {
+  background: #19152c;
+  color: var(--ink);
+}
+
+
+/* ======================================================================
+   THEME CHANGE — SIMPLE FADE
+
+   A short, lightweight fade only. The dark palette remains neon/city-like,
+   but switching themes no longer animates gradients, filters or transforms.
+   ====================================================================== */
+
+html.theme-fading body,
+html.theme-fading .hero-stat,
+html.theme-fading .panel,
+html.theme-fading .make-me,
+html.theme-fading .stock-group,
+html.theme-fading .cocktail-card,
+html.theme-fading .variant-picker,
+html.theme-fading .choice-group,
+html.theme-fading .serve-component,
+html.theme-fading .taste-profile,
+html.theme-fading .btn,
+html.theme-fading .control,
+html.theme-fading .multiplier,
+html.theme-fading .qr-action,
+html.theme-fading .view-mode-btn,
+html.theme-fading .clear-filters-btn,
+html.theme-fading .quick-filter,
+html.theme-fading .surprise-btn,
+html.theme-fading .share-qr-btn,
+html.theme-fading .variant-btn,
+html.theme-fading .heart,
+html.theme-fading .availability,
+html.theme-fading .filter-chip,
+html.theme-fading .ingredient-name-btn,
+html.theme-fading .bartender-pick {
+  transition:
+    background-color .28s ease,
+    color .28s ease,
+    border-color .28s ease,
+    box-shadow .28s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after,
+  html.theme-fading body,
+  html.theme-fading * {
+    transition: none !important;
+  }
 }

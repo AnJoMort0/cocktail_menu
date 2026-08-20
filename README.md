@@ -37,6 +37,11 @@ The four displayed scales are **Sweet, Sour, Strong, and Bubbly**. Sangria varia
 
 Cocktail cards use a masonry-style packed wall. The app still sorts the cocktail array first (including availability/favorite priority) and then places each sorted card into the shortest current column. This keeps large cards such as Sangria from creating empty grid rows.
 
+
+## Light / dark theme
+
+Use the **🌙 Dark / ☀️ Light** button in the header to switch appearance. The preference is saved locally on that browser/device and is intentionally not included in QR sharing. The saved theme is applied before the stylesheet paints, avoiding a bright flash when reopening the installed app in dark mode.
+
 ## Guest / Bartender view
 
 A new browser starts in Guest view. It hides stock controls, exact measurements, preparation instructions, service details and copy-recipe buttons. Tap **🍸 Bartender** to reveal them. The preferred view is saved locally on that browser.
@@ -69,3 +74,16 @@ The service worker is network-first, so online visits fetch the latest GitHub Pa
 - `manifest.webmanifest` — install metadata
 - `service-worker.js` — offline cache
 - `icons/` — app icons
+
+
+## Neon dark theme
+
+The device-local dark mode uses a night-city palette with sunset orange, hot pink, neon purple and electric cyan accents. The light theme is unchanged.
+
+## Living day/night transition
+
+The theme button no longer covers the page with a transition overlay. Cocktail cards, text and controls stay visible while the actual palette interpolates. The warm daylight background sinks and fades while the neon city background rises in; switching back reverses the movement into sunrise. Reduced-motion preferences still switch themes without animation.
+
+## Theme fade
+
+The Light/Dark button uses a short 280 ms fade between the warm light palette and the neon dark palette. It avoids moving gradients, filters and large animations for smoother performance on phones. The preference remains device-local.

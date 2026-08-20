@@ -16,7 +16,8 @@ const STORAGE_KEYS = {
   // These ARE included in QR snapshots.
   bartenderFavorites: "homeCocktailBar.bartenderFavorites.v1",
 
-  mode: "homeCocktailBar.mode.v1"
+  mode: "homeCocktailBar.mode.v1",
+  theme: "homeCocktailBar.theme.v1"
 };
 
 const ingredientMap = new Map(INGREDIENTS.map(item => [item.id, item]));
@@ -57,6 +58,7 @@ const els = {
   resultsCount: document.getElementById("resultsCount"),
   grid: document.getElementById("cocktailGrid"),
   modeToggleBtn: document.getElementById("modeToggleBtn"),
+  themeToggleBtn: document.getElementById("themeToggleBtn"),
   installBtn: document.getElementById("installBtn"),
   surpriseBtn: document.getElementById("surpriseBtn"),
   quickFilters: document.getElementById("quickFilters"),
@@ -68,6 +70,7 @@ let stock = loadStock();
 let favorites = loadFavorites();               // personal, device-only hearts
 let bartenderFavorites = loadBartenderFavorites(); // André's shared picks
 let appMode = loadMode();
+let appTheme = loadTheme();
 let drinkMultiplier = 1;
 let currentShareUrl = "";
 let highlightedIngredientId = null;
@@ -295,6 +298,18 @@ function loadMode() {
 
 function saveMode() {
   try { localStorage.setItem(STORAGE_KEYS.mode, appMode); } catch {}
+}
+
+function loadTheme() {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.theme) === "dark" ? "dark" : "light";
+  } catch {
+    return "light";
+  }
+}
+
+function saveTheme() {
+  try { localStorage.setItem(STORAGE_KEYS.theme, appTheme); } catch {}
 }
 
 function ingredientName(id) {
@@ -1037,6 +1052,43 @@ function applyMode() {
 }
 function toggleMode() { appMode = appMode === "guest" ? "bartender" : "guest"; saveMode(); applyMode(); renderCocktails(); }
 
+function applyTheme() {
+  const dark = appTheme === "dark";
+  document.documentElement.classList.toggle("dark-theme", dark);
+  els.themeToggleBtn.textContent = dark ? "☀️ Light" : "🌙 Dark";
+  els.themeToggleBtn.setAttribute("aria-pressed", dark ? "true" : "false");
+  els.themeToggleBtn.title = dark ? "Switch to light mode" : "Switch to dark mode";
+
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeMeta) themeMeta.setAttribute("content", dark ? "#090711" : "#f3f0e9");
+}
+
+function toggleTheme() {
+  const root = document.documentElement;
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  if (reducedMotion) {
+    appTheme = appTheme === "dark" ? "light" : "dark";
+    saveTheme();
+    applyTheme();
+    return;
+  }
+
+  if (root.classList.contains("theme-fading")) return;
+
+  root.classList.add("theme-fading");
+
+  // Make sure the lightweight transition rules are active before changing
+  // the palette, otherwise some browsers may batch both class changes.
+  void document.body.offsetWidth;
+
+  appTheme = appTheme === "dark" ? "light" : "dark";
+  saveTheme();
+  applyTheme();
+
+  window.setTimeout(() => root.classList.remove("theme-fading"), 320);
+}
+
 function registerPwa() {
   if ("serviceWorker" in navigator && location.protocol !== "file:") window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js").catch(error => console.warn("Service worker registration failed", error)));
   window.addEventListener("beforeinstallprompt", event => { event.preventDefault(); deferredInstallPrompt = event; els.installBtn.hidden = false; });
@@ -1076,12 +1128,14 @@ els.copyShareLinkBtn.addEventListener("click", copyShareLink);
 els.clearFiltersBtn.addEventListener("click", clearFilters);
 els.surpriseBtn.addEventListener("click", surpriseMe);
 els.modeToggleBtn.addEventListener("click", toggleMode);
+els.themeToggleBtn.addEventListener("click", toggleTheme);
 els.installBtn.addEventListener("click", installPwa);
 els.quickFilters.querySelectorAll("[data-quick-category]").forEach(button => button.addEventListener("click", () => chooseQuickCategory(button.dataset.quickCategory)));
 els.shareQrDialog.addEventListener("click", event => { if (event.target === els.shareQrDialog) els.shareQrDialog.close(); });
 els.minus.addEventListener("click", () => { drinkMultiplier = Math.max(1, drinkMultiplier - 1); renderCocktails(); });
 els.plus.addEventListener("click", () => { drinkMultiplier = Math.min(20, drinkMultiplier + 1); renderCocktails(); });
 
+applyTheme();
 applyMode();
 populateFilters();
 renderStock();
